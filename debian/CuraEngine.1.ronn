@@ -1,0 +1,65 @@
+CuraEngine(1) -- STL to GCODE converter
+=======================================
+<!--
+CuraEngine.1.ronn - manual page for CuraEngine
+Copyright 2014 Bas Wijnen <wijnen@debian.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+## SYNOPSIS
+`CuraEngine` [-h] [-v] [-m 3x3matrix] [-s <settingkey>=<value>] -o <output.gcode> <model.stl>
+
+## DESCRIPTION
+CuraEngine is a commandline tool for converting 3-D models to toolpaths used by
+3-D printers, in particular RepRap and derivatives.  It is meant to be used by
+the cura(1) gui, but can be used without it.
+
+It does not support the use of a configuration file; all settings must be
+specified on the commandline.
+
+If not output file is specified, the standard output is used.
+
+All settings are integer values, except for startCode and endCode, which are
+strings.  Note that they should usually contain newlines; make sure to use
+proper escaping to avoid the shell from parsing them.
+
+The units that are used are:
+
+  * Lengths are in micrometers.
+  * Speeds are in millimeters per second.
+  * Angles are in degrees.
+  * Times are in seconds.
+
+The following integer settings can be specified:
+
+coolHeadLift, downSkinCount, enableCombing, enableOozeShield,
+extruderOffset[1].X, extruderOffset[1].Y, extruderOffset[2].X,
+extruderOffset[2].Y, extruderOffset[3].X, extruderOffset[3].Y, extrusionWidth,
+fanFullOnLayerNr, fanSpeedMax, fanSpeedMin, filamentDiameter, filamentFlow,
+fixHorrible, gcodeFlavor, infillOverlap, infillSpeed, initialLayerSpeed,
+initialLayerThickness, initialSpeedupLayers, insetCount, layerThickness,
+minimalExtrusionBeforeRetraction, minimalFeedrate, minimalLayerTime, moveSpeed,
+multiVolumeOverlap, objectPosition.X, posx, objectPosition.Y, posy, objectSink,
+printSpeed, raftBaseLinewidth, raftBaseThickness, raftInterfaceLinewidth,
+raftInterfaceThickness, raftLineSpacing, raftMargin, retractionAmount,
+retractionAmountExtruderSwitch, retractionMinimalDistance, retractionSpeed,
+skirtDistance, skirtLineCount, skirtMinLength, sparseInfillLineDistance,
+spiralizeMode, supportAngle, supportEverywhere, supportExtruder,
+supportLineDistance, supportXYDistance, supportZDistance, upSkinCount,
+wipeTowerSize.
+
+## AUTHOR
+CuraEngine was written by Daid.  This manual page was written by Bas Wijnen
+\<wijnen@debian.org\>, for the Debian project (but may be used by others).

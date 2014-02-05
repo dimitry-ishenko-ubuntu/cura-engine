@@ -1,0 +1,8 @@
+cura-engine (14.01-1) unstable; urgency=low
+
+  * Initial Release. (Closes: #729146)
+  * Make include paths nicer.
+  * Use system clipper library.
+  * Report correct version.
+
+ -- Bas Wijnen <wijnen@debian.org>  Tue, 04 Feb 2014 20:14:06 -0500

@@ -1,0 +1,18 @@
+Description: Set correct version
+ Set the reported version to the correct value for this release.
+Forwarded: yes, by private email; fixed upstream.
+Last-Update: 2014-01-24
+
+Index: cura-engine-14.01/settings.h
+===================================================================
+--- cura-engine-14.01.orig/settings.h	2014-01-23 23:23:32.267784416 -0500
++++ cura-engine-14.01/settings.h	2014-01-23 23:24:17.000000000 -0500
+@@ -4,7 +4,7 @@
+ #include "utils/floatpoint.h"
+ #include <vector>
+ 
+-#define VERSION "13.12"
++#define VERSION "14.01"
+ 
+ #define FIX_HORRIBLE_UNION_ALL_TYPE_A    0x01
+ #define FIX_HORRIBLE_UNION_ALL_TYPE_B    0x02
