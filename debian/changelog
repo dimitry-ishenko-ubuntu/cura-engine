@@ -1,3 +1,10 @@
+cura-engine (14.01-2) unstable; urgency=medium
+
+  * Add pkg-config build dependency. (Closes: #737942)
+  * Add python build dependency to allow running tests.
+
+ -- Bas Wijnen <wijnen@debian.org>  Fri, 07 Feb 2014 16:59:54 -0500
+
 cura-engine (14.01-1) unstable; urgency=low
 
   * Initial Release. (Closes: #729146)
