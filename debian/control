@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: 3-D printer team <3dprinter-general@lists.alioth.debian.org>
 Uploaders: Bas Wijnen <wijnen@debian.org>
 Build-Depends: debhelper (>= 9), libpolyclipping-dev (>= 6.1.3a), ruby-ronn, pkg-config, python
-Standards-Version: 3.9.5
+Standards-Version: 3.9.8
 Homepage: https://github.com/Ultimaker/CuraEngine
 
 Package: cura-engine

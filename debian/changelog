@@ -1,3 +1,12 @@
+cura-engine (14.01-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Bump Standards-Version to 3.9.8, no changes needed.
+  * Apply patch from Graham Inggs <ginggs@debian.org> to fix FTBFS with a
+    recent toolchain.  Closes: #818140
+
+ -- Mattia Rizzolo <mattia@debian.org>  Thu, 09 Mar 2017 13:43:30 +0100
+
 cura-engine (14.01-2) unstable; urgency=medium
 
   * Add pkg-config build dependency. (Closes: #737942)
