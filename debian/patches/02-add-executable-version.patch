@@ -1,3 +1,8 @@
+Author: Gregor Riepl <onitake@gmail.com>
+Description: Add VERSION definition to CuraEngine.
+  The upstream CMakeFile did not pass version information to the compilation
+  of main.cpp. This left the CuraEngine binary with the default version
+  string of DEV. The patch fixes this minor issue.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -141,6 +141,8 @@
