@@ -4,7 +4,7 @@ Maintainer: Gregor Riepl <onitake@gmail.com>
 Build-Depends: debhelper (>= 10), cmake (>=2.8.12),
  protobuf-compiler (>=3.0.0), libprotobuf-dev,
  rapidjson-dev, libpolyclipping-dev,
- libarcus-dev (>=2.3.1)
+ libarcus-dev (>=2.4.0)
 Standards-Version: 3.9.8
 Section: utils
 Homepage: https://github.com/Ultimaker/CuraEngine
