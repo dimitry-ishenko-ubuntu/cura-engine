@@ -5,7 +5,7 @@ Description: Add VERSION definition to CuraEngine.
   string of DEV. The patch fixes this minor issue.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -141,6 +141,8 @@
+@@ -146,6 +146,8 @@
  add_executable(CuraEngine src/main.cpp) #Then compile main.cpp as separate executable, and link the library to it.
  target_link_libraries(CuraEngine _CuraEngine)
  

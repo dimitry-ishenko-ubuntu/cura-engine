@@ -17,7 +17,7 @@
  
  set(engine_SRCS # Except main.cpp.
      src/bridge.cpp
-@@ -128,7 +133,7 @@
+@@ -133,7 +138,7 @@
  
  # Compiling CuraEngine itself.
  add_library(_CuraEngine ${engine_SRCS} ${engine_PB_SRCS}) #First compile all of CuraEngine as library, allowing this to be re-used for tests.
