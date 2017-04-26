@@ -1,7 +1,7 @@
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -40,9 +40,14 @@
-     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
+@@ -50,9 +50,14 @@
+     endif()
  endif()
  
 -include_directories(${CMAKE_CURRENT_BINARY_DIR} libs)
@@ -17,7 +17,7 @@
  
  set(engine_SRCS # Except main.cpp.
      src/bridge.cpp
-@@ -133,7 +138,7 @@
+@@ -140,7 +145,7 @@
  
  # Compiling CuraEngine itself.
  add_library(_CuraEngine ${engine_SRCS} ${engine_PB_SRCS}) #First compile all of CuraEngine as library, allowing this to be re-used for tests.
