@@ -1,3 +1,8 @@
+Author: Gregor Riepl <onitake@gmail.com>
+Description: Depend on system rapidjson and polyclipping.
+  Upstream bundled their own versions of librapidjson and
+  libclipper/polyclipping. On Debian, we have maintained
+  packages of these libraries, so use those instead.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -50,9 +50,14 @@
