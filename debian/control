@@ -8,8 +8,8 @@ Build-Depends: debhelper (>= 10), cmake (>=2.8.12),
 Standards-Version: 3.9.8
 Section: utils
 Homepage: https://github.com/Ultimaker/CuraEngine
-Vcs-Git: https://github.com/onitake/CuraEngine
-Vcs-Browser: https://github.com/onitake/CuraEngine
+Vcs-Browser: https://anonscm.debian.org/cgit/3dprinter/packages/cura-engine.git/
+Vcs-Git: https://anonscm.debian.org/git/3dprinter/packages/cura-engine.git
 
 Package: cura-engine
 Architecture: any
