@@ -1,14 +1,20 @@
-Cura Debian packaging notes
----------------------------
+CuraEngine for Debian
+---------------------
 
-Part of the dependency list is based on the work of
-Thomas Karl Pietrowski (thopiekar). You can find his
-own packaging effort here:
-https://github.com/thopiekar/Cura-packaging
+This package is part of the Cura suite.
 
-CuraEngine uses the rapidjson library, which normally
-includes test scripts that are covered by a problematic
-license. These test scripts were removed by the upstream
-project, so the respective clauses in the license file
+It is normally installed along with the Cura application, but can be
+used standalone, if desired.
+
+CuraEngine uses the rapidjson library, which normally includes test scripts
+that are covered by a problematic license. These test scripts were already
+removed by the upstream project, so the respective clauses in the license file
 do not apply to CuraEngine.
 A Lintian override was added to reflect this.
+
+
+Acknowledgements:
+
+The dependency list is based on the work of Thomas Karl Pietrowski
+(thopiekar). You can find his own packaging effort here:
+https://github.com/thopiekar/Cura-packaging
