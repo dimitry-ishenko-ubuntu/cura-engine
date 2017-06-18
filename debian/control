@@ -2,6 +2,7 @@ Source: cura-engine
 Priority: optional
 Maintainer: Gregor Riepl <onitake@gmail.com>
 Build-Depends: debhelper (>= 10), cmake (>=2.8.12),
+ pkg-config (>=0.29),
  protobuf-compiler (>=3.0.0), libprotobuf-dev,
  rapidjson-dev, libpolyclipping-dev,
  libarcus-dev (>=2.5.0)
