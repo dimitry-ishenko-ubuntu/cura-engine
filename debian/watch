@@ -1,3 +1,0 @@
-version=3
-opts=filenamemangle=s/.+\/(\d\d\.\d\d)\.tar\.gz/Cura-$1\.tar\.gz/ \
-  https://github.com/Ultimaker/CuraEngine/releases .*/(\d\d\.\d\d)\.tar\.gz
