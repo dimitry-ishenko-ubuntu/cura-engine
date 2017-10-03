@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+at_exit() {
+    echo "info: test exiting"
+}
+
+trap at_exit INT TERM EXIT
+
+echo "info: Generating gcode from stl file"
+CuraEngine slice -l tests/testModel.stl  -o $AUTOPKGTEST_TMP/foo.gcode
