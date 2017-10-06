@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 10), cmake (>=2.8.12),
  protobuf-compiler (>=3.0.0), libprotobuf-dev,
  rapidjson-dev, libpolyclipping-dev,
  libarcus-dev (>=2.5.0)
-Standards-Version: 4.1.0
+Standards-Version: 4.1.1
 Section: utils
 Homepage: https://github.com/Ultimaker/CuraEngine
 Vcs-Browser: https://anonscm.debian.org/cgit/3dprinter/packages/cura-engine.git/
