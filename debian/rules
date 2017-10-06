@@ -11,4 +11,4 @@ include /usr/share/dpkg/pkg-info.mk
 	dh $@ --buildsystem=cmake --parallel
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCURA_ENGINE_VERSION:STRING=$(DEB_VERSION_UPSTREAM)
+	dh_auto_configure -- -DCURA_ENGINE_VERSION:STRING=$(DEB_VERSION_UPSTREAM) -DBUILD_TESTS=ON

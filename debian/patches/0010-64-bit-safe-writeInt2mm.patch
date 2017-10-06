@@ -1,0 +1,34 @@
+Description: Correct writeInt2mm() to work with int64_t
+ The writeInt2mm() method fail in tests/utils/StringTest.cpp
+ when it is asked to convert the maxium value of int64_t
+ to a string, as the value is cast to (int) before printing,
+ which always fail if the value is too large.  Rewrite writeInt2mm
+ to work with int64_t internally to avoid the problem.
+Author: Petter Reinholdtsen <pere@hungry.com>
+Forwarded: no
+Reviewed-By: Petter Reinholdtsen <pere@hungry.com>
+Last-Update: 2017-10-06
+
+diff --git a/src/utils/string.h b/src/utils/string.h
+index 7e3af91f..cd4df8e8 100644
+--- a/src/utils/string.h
++++ b/src/utils/string.h
+@@ -38,15 +38,15 @@ static inline void writeInt2mm(const int64_t coord, std::ostream& ss)
+ {
+     constexpr size_t buffer_size = 24;
+     char buffer[buffer_size];
+-    int char_count = sprintf(buffer, "%d", int(coord)); // convert int to string
++    int char_count = sprintf(buffer, "%" PRId64, coord); // convert int to string
+ #ifdef DEBUG
+     if (char_count + 1 >= int(buffer_size)) // + 1 for the null character
+     {
+-        logError("Cannot write %ld to buffer of size %i", coord, buffer_size);
++        logError("Cannot write %" PRId64 " to buffer of size %i", coord, buffer_size);
+     }
+     if (char_count < 0)
+     {
+-        logError("Encoding error while writing %ld", coord);
++        logError("Encoding error while writing %" PRId64, coord);
+     }
+ #endif // DEBUG
+     int end_pos = char_count; // the first character not to write any more

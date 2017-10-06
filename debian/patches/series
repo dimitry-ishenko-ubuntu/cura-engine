@@ -1,3 +1,4 @@
+0010-64-bit-safe-writeInt2mm.patch
 01-remove-rpath.patch
 02-add-executable-version.patch
 03-system-rapidjson.patch
