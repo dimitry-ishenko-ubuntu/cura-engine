@@ -2,3 +2,4 @@
 01-remove-rpath.patch
 02-add-executable-version.patch
 03-system-rapidjson.patch
+1000-64-bit-safe-stringtest.patch
