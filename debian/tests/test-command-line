@@ -9,4 +9,4 @@ at_exit() {
 trap at_exit INT TERM EXIT
 
 echo "info: Generating gcode from stl file"
-CuraEngine slice -l tests/testModel.stl  -o $AUTOPKGTEST_TMP/foo.gcode
+CuraEngine slice -j debian/tests/fdmprinter.def.json -l tests/testModel.stl -o $AUTOPKGTEST_TMP/foo.gcode
