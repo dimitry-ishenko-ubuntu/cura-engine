@@ -25,7 +25,7 @@ Copyright:
  2016 Gregor Riepl <onitake@gmail.com>
 License: BSD-3-clause
 
-Files: debian/tests/fdmprinter.def.json
+Files: debian/tests/*.def.json
 Copyright:
  Copyright (C) 2016-2017 Ultimaker
 License: AGPL-3+
