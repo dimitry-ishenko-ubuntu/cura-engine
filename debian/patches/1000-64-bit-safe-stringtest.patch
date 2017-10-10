@@ -6,11 +6,17 @@ Forwarded: no
 Reviewed-By: Petter Reinholdtsen <pere@hungry.com>
 Last-Update: 2017-10-07
 
-Index: cura-engine/tests/utils/StringTest.cpp
-===================================================================
---- cura-engine.orig/tests/utils/StringTest.cpp	2017-10-03 04:17:45.270801535 +0000
-+++ cura-engine/tests/utils/StringTest.cpp	2017-10-07 04:41:34.768035539 +0000
-@@ -87,13 +87,13 @@
+--- a/tests/utils/StringTest.cpp
++++ b/tests/utils/StringTest.cpp
+@@ -7,6 +7,7 @@
+ #include <sstream> // ostringstream
+ #include <../src/utils/intpoint.h>
+ #include <../src/utils/string.h>
++#include <cinttypes>
+ 
+ 
+ namespace cura
+@@ -87,13 +88,13 @@
      if (!ss.good())
      {
          char buffer[200];
