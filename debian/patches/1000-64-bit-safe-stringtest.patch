@@ -2,9 +2,9 @@ Description: Correct writeInt2mmAssert() to work with int64_t
  The writeInt2mmAssert() method in tests/utils/StringTest.cpp uses
  the wrong printf formatting string when printing int64_t.
 Author: Petter Reinholdtsen <pere@hungry.com>
-Forwarded: no
-Reviewed-By: Petter Reinholdtsen <pere@hungry.com>
-Last-Update: 2017-10-07
+Forwarded: https://github.com/Ultimaker/CuraEngine/pull/621
+Reviewed-By: Gregor Riepl <onitake@gmail.com>
+Last-Update: 2017-10-13
 
 --- a/tests/utils/StringTest.cpp
 +++ b/tests/utils/StringTest.cpp
