@@ -1,5 +1,5 @@
-0010-64-bit-safe-writeInt2mm.patch
-01-remove-rpath.patch
-02-add-executable-version.patch
-03-system-rapidjson.patch
 1000-64-bit-safe-stringtest.patch
+1010-64-bit-safe-writeInt2mm.patch
+2000-remove-rpath.patch
+2010-add-executable-version.patch
+2020-system-rapidjson.patch
