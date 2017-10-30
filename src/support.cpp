@@ -1,4 +1,3 @@
-//Copyright (C) 2013 David Braam
 //Copyright (c) 2017 Ultimaker B.V.
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
@@ -15,6 +14,7 @@
 
 #include "utils/math.h"
 #include "progress/Progress.h"
+#include "infill/SpaceFillingTreeFill.h"
 
 namespace cura 
 {
@@ -624,6 +624,41 @@ void AreaSupport::generateSupportAreas(SliceDataStorage& storage, unsigned int l
 
     // split the global support areas into parts for later gradual support infill generation
     AreaSupport::splitGlobalSupportAreasIntoSupportInfillParts(storage, global_support_areas_per_layer, storage.print_layer_count);
+
+    // Pre-compute Cross Fractal
+    const ExtruderTrain& infill_extr = *storage.meshgroup->getExtruderTrain(storage.getSettingAsIndex("support_infill_extruder_nr"));
+    const EFillMethod support_pattern = infill_extr.getSettingAsFillMethod("support_pattern");
+    if (support_pattern == EFillMethod::CROSS || support_pattern == EFillMethod::CROSS_3D)
+    {
+        AABB3D aabb;
+        for (unsigned int mesh_idx = 0; mesh_idx < storage.meshes.size(); mesh_idx++)
+        {
+            const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+            if (mesh.getSettingBoolean("infill_mesh") || mesh.getSettingBoolean("anti_overhang_mesh"))
+            {
+                continue;
+            }
+            SettingsBaseVirtual* infill_settings = &storage.meshes[mesh_idx];
+            if (mesh.getSettingBoolean("support_mesh"))
+            {
+                // use extruder train settings rather than the per-object settings of the first support mesh encountered.
+                // because all support meshes are processed at the same time it doesn't make sense to use the per-object settings of the first support mesh encountered.
+                // instead we must use the support extruder settings, which is the settings base common to all support meshes.
+                int infill_extruder_nr = storage.getSettingAsIndex("support_infill_extruder_nr");
+                infill_settings = storage.meshgroup->getExtruderTrain(infill_extruder_nr);
+            }
+            const coord_t aabb_expansion = infill_settings->getSettingInMicrons("support_offset");
+            AABB3D aabb_here(mesh.bounding_box);
+            aabb_here.include(aabb_here.min - Point3(-aabb_expansion, -aabb_expansion, 0));
+            aabb_here.include(aabb_here.max + Point3(-aabb_expansion, -aabb_expansion, 0));
+            aabb.include(aabb_here);
+        }
+        for (unsigned int density_idx = 0; density_idx <= (unsigned int)infill_extr.getSettingAsCount("gradual_support_infill_steps"); ++density_idx)
+        {
+            coord_t line_distance = infill_extr.getSettingInMicrons("support_line_distance") << density_idx;
+            storage.support.cross_fill_patterns.push_back(new SpaceFillingTreeFill(line_distance, aabb));
+        }
+    }
 }
 
 /* 
@@ -644,7 +679,7 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage, const S
     // given settings
     ESupportType support_type = storage.getSettingAsSupportType("support_type");
 
-    const bool is_support_modifier_place_holder = mesh.getSettingBoolean("support_mesh"); // whether this mesh is an empty mesh and this function is only called to generate support for support meshes
+    const bool is_support_modifier_place_holder = mesh.getSettingBoolean("support_mesh"); // whether this mesh has empty SliceMeshStorage and this function is now called to only generate support for all support meshes
     const bool is_support_mesh_nondrop_place_holder = is_support_modifier_place_holder && !mesh.getSettingBoolean("support_mesh_drop_down");
     const bool is_support_mesh_drop_down_place_holder = is_support_modifier_place_holder && mesh.getSettingBoolean("support_mesh_drop_down");
 
@@ -684,7 +719,7 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage, const S
 
     const double conical_support_angle = infill_settings.getSettingInAngleRadians("support_conical_angle");
     const bool conical_support = infill_settings.getSettingBoolean("support_conical_enabled") && conical_support_angle != 0;
-    const int64_t conical_smallest_breadth = infill_settings.getSettingInMicrons("support_conical_min_width");
+    const coord_t conical_smallest_breadth = infill_settings.getSettingInMicrons("support_conical_min_width");
 
     // derived settings:
     const int max_smoothing_angle = 135; // maximum angle of inner corners to be smoothed
@@ -722,7 +757,7 @@ void AreaSupport::generateSupportAreasForMesh(SliceDataStorage& storage, const S
     double tanAngle = tan(supportAngle) - 0.01;  // the XY-component of the supportAngle
     int max_dist_from_lower_layer = tanAngle * supportLayerThickness; // max dist which can be bridged
     
-    int64_t conical_support_offset;
+    coord_t conical_support_offset;
     if (conical_support_angle > 0) 
     { // outward ==> wider base than overhang
         conical_support_offset = -(tan(conical_support_angle) - 0.01) * supportLayerThickness;

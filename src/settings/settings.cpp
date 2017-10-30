@@ -371,6 +371,8 @@ EFillMethod SettingsBaseVirtual::getSettingAsFillMethod(std::string key) const
         return EFillMethod::CUBICSUBDIV;
     if (value == "tetrahedral")
         return EFillMethod::TETRAHEDRAL;
+    if (value == "quarter_cubic")
+        return EFillMethod::QUARTER_CUBIC;
     if (value == "triangles")
         return EFillMethod::TRIANGLES;
     if (value == "concentric")
@@ -379,6 +381,10 @@ EFillMethod SettingsBaseVirtual::getSettingAsFillMethod(std::string key) const
         return EFillMethod::CONCENTRIC_3D;
     if (value == "zigzag")
         return EFillMethod::ZIG_ZAG;
+    if (value == "cross")
+        return EFillMethod::CROSS;
+    if (value == "cross_3d")
+        return EFillMethod::CROSS_3D;
     return EFillMethod::NONE;
 }
 
@@ -413,7 +419,23 @@ EZSeamType SettingsBaseVirtual::getSettingAsZSeamType(std::string key) const
         return EZSeamType::SHORTEST;
     if (value == "back")
         return EZSeamType::USER_SPECIFIED;
+    if (value == "sharpest_corner")
+        return EZSeamType::SHARPEST_CORNER;
     return EZSeamType::SHORTEST;
+}
+
+EZSeamCornerPrefType SettingsBaseVirtual::getSettingAsZSeamCornerPrefType(std::string key) const
+{
+    std::string value = getSettingString(key);
+    if (value == "z_seam_corner_none")
+        return EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_NONE;
+    if (value == "z_seam_corner_inner")
+        return EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_INNER;
+    if (value == "z_seam_corner_outer")
+        return EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_OUTER;
+    if (value == "z_seam_corner_any")
+        return EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_ANY;
+    return EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_NONE;
 }
 
 ESurfaceMode SettingsBaseVirtual::getSettingAsSurfaceMode(std::string key) const

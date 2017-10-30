@@ -24,6 +24,7 @@
 #include "SkirtBrim.h"
 #include "skin.h"
 #include "infill/SpaghettiInfill.h"
+#include "infill/SpaceFillingTreeFill.h"
 #include "infill.h"
 #include "raft.h"
 #include "progress/Progress.h"
@@ -466,6 +467,8 @@ void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
                     part.perimeter_gaps.add(outer.difference(inner));
                 }
 
+                part.perimeter_gaps.removeSmallAreas(2 * INT2MM(wall_line_width_0) * INT2MM(wall_line_width_0)); // remove small outline gaps to reduce blobs on outside of model
+
                 // gap between inner wall and skin/infill
                 if (fill_gaps_between_inner_wall_and_skin_or_infill && part.insets.size() > 0)
                 {
@@ -496,6 +499,8 @@ void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
                             const Polygons inner = skin_part.insets[inset_idx].offset(wall_line_width_x / 2);
                             skin_part.perimeter_gaps.add(outer.difference(inner));
                         }
+
+                        skin_part.perimeter_gaps.removeSmallAreas(2 * INT2MM(wall_line_width_0) * INT2MM(wall_line_width_0)); // remove small outline gaps to reduce blobs on outside of model
                     }
                 }
             }
@@ -587,9 +592,22 @@ void FffPolygonGenerator::processDerivedWallsSkinInfill(SliceMeshStorage& mesh)
         SkinInfillAreaComputation::generateGradualInfill(mesh, mesh.getSettingInMicrons("gradual_infill_step_height"), mesh.getSettingAsCount("gradual_infill_steps"));
 
         //SubDivCube Pre-compute Octree
-        if (mesh.getSettingAsFillMethod("infill_pattern") == EFillMethod::CUBICSUBDIV)
+        if (mesh.getSettingInMicrons("infill_line_distance") > 0
+            && mesh.getSettingAsFillMethod("infill_pattern") == EFillMethod::CUBICSUBDIV)
         {
             SubDivCube::precomputeOctree(mesh);
+        }
+
+        // Pre-compute Cross Fractal
+        if (mesh.getSettingInMicrons("infill_line_distance") > 0
+            && (mesh.getSettingAsFillMethod("infill_pattern") == EFillMethod::CROSS
+                || mesh.getSettingAsFillMethod("infill_pattern") == EFillMethod::CROSS_3D)
+        )
+        {
+            for (unsigned int gradual_step = 0; gradual_step <= (unsigned int)mesh.getSettingAsCount("gradual_infill_steps"); gradual_step++)
+            {
+                mesh.cross_fill_patterns.push_back(new SpaceFillingTreeFill(mesh.getSettingInMicrons("infill_line_distance") << gradual_step, mesh.bounding_box));
+            }
         }
 
         // combine infill
@@ -725,41 +743,10 @@ void FffPolygonGenerator::processSkinsAndInfill(const SliceDataStorage& storage,
         return;
     }
 
-    int bottom_layers = mesh.getSettingAsCount("bottom_layers");
-    int top_layers = mesh.getSettingAsCount("top_layers");
-    const int wall_line_count = mesh.getSettingAsCount("wall_line_count");
-    coord_t wall_line_width_0 = mesh.getSettingInMicrons("wall_line_width_0");
-    coord_t wall_line_width_x = mesh.getSettingInMicrons("wall_line_width_x");
-    if (layer_nr == 0)
-    {
-        const ExtruderTrain& train_wall_0 = *storage.meshgroup->getExtruderTrain(mesh.getSettingAsExtruderNr("wall_0_extruder_nr"));
-        wall_line_width_0 *= train_wall_0.getSettingAsRatio("initial_layer_line_width_factor");
-        const ExtruderTrain& train_wall_x = *storage.meshgroup->getExtruderTrain(mesh.getSettingAsExtruderNr("wall_x_extruder_nr"));
-        wall_line_width_x *= train_wall_x.getSettingAsRatio("initial_layer_line_width_factor");
-    }
-    const coord_t innermost_wall_line_width = (wall_line_count == 1) ? wall_line_width_0 : wall_line_width_x;
-
-    int infill_skin_overlap = 0;
-    { // compute infill_skin_overlap
-        const ExtruderTrain& train_infill = *storage.meshgroup->getExtruderTrain(mesh.getSettingAsExtruderNr("infill_extruder_nr"));
-        const coord_t infill_line_width_factor = (layer_nr == 0) ? train_infill.getSettingAsRatio("initial_layer_line_width_factor") : 1.0;
-        const bool infill_is_dense = mesh.getSettingInMicrons("infill_line_distance") < mesh.getSettingInMicrons("infill_line_width") * infill_line_width_factor + 10;
-        if (!infill_is_dense && mesh.getSettingAsFillMethod("infill_pattern") != EFillMethod::CONCENTRIC)
-        {
-            infill_skin_overlap = innermost_wall_line_width / 2;
-        }
-    }
-    if (layer_nr == 0)
-    {
-        const ExtruderTrain& train_wall_x = *storage.meshgroup->getExtruderTrain(mesh.getSettingAsExtruderNr("wall_x_extruder_nr"));
-        wall_line_width_x *= train_wall_x.getSettingAsRatio("initial_layer_line_width_factor");
-    }
-    int skin_outline_count = mesh.getSettingAsCount("skin_outline_count");
-    bool skin_no_small_gaps_heuristic = mesh.getSettingBoolean("skin_no_small_gaps_heuristic");
-    SkinInfillAreaComputation skin_infill_area_computation(layer_nr, mesh, bottom_layers, top_layers, wall_line_count, innermost_wall_line_width, infill_skin_overlap, wall_line_width_x, skin_outline_count, skin_no_small_gaps_heuristic, process_infill);
+    SkinInfillAreaComputation skin_infill_area_computation(layer_nr, storage, mesh, process_infill);
     skin_infill_area_computation.generateSkinsAndInfill();
 
-    if (mesh.getSettingBoolean("ironing_enabled"))
+    if (mesh.getSettingBoolean("ironing_enabled") && (!mesh.getSettingBoolean("ironing_only_highest_layer") || (unsigned int)mesh.layer_nr_max_filled_layer == layer_nr))
     {
         TopSurface* top_surface = new TopSurface(mesh, layer_nr); //Generate the top surface to iron over.
         mesh.layers[layer_nr].top_surface = top_surface;
