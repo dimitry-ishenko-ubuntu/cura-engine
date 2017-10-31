@@ -5,7 +5,7 @@ Description: Depend on system rapidjson and polyclipping.
   packages of these libraries, so use those instead.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -50,9 +50,14 @@
+@@ -51,9 +51,14 @@
      endif()
  endif()
  
@@ -22,7 +22,7 @@ Description: Depend on system rapidjson and polyclipping.
  
  set(engine_SRCS # Except main.cpp.
      src/bridge.cpp
-@@ -140,7 +145,7 @@
+@@ -149,7 +154,7 @@
  
  # Compiling CuraEngine itself.
  add_library(_CuraEngine ${engine_SRCS} ${engine_PB_SRCS}) #First compile all of CuraEngine as library, allowing this to be re-used for tests.
@@ -34,7 +34,7 @@ Description: Depend on system rapidjson and polyclipping.
 --- a/src/raft.cpp
 +++ b/src/raft.cpp
 @@ -1,5 +1,5 @@
- /** Copyright (C) 2013 David Braam - Released under terms of the AGPLv3 License */
+ /** Copyright (C) 2013 Ultimaker - Released under terms of the AGPLv3 License */
 -#include <clipper/clipper.hpp>
 +#include <polyclipping/clipper.hpp>
  
@@ -53,7 +53,7 @@ Description: Depend on system rapidjson and polyclipping.
  #include <stdint.h>
 --- a/src/utils/polygon.h
 +++ b/src/utils/polygon.h
-@@ -4,7 +4,7 @@
+@@ -7,7 +7,7 @@
  #include <vector>
  #include <assert.h>
  #include <float.h>
