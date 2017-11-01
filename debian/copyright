@@ -4,8 +4,7 @@ Source: https://github.com/Ultimaker/CuraEngine
 
 Files: *
 Copyright:
- Copyright (C) 2015-2016 Ultimaker
- Copyright (C) 2013 David Braam
+ Copyright (C) 2013-2017 Ultimaker B.V.
 License: AGPL-3+
 
 Files: libs/clipper/*
@@ -22,12 +21,15 @@ License: BSD-3-clause
 
 Files: debian/*
 Copyright:
- 2016 Gregor Riepl <onitake@gmail.com>
+ 2014 Bas Wijnen <wijnen@debian.org>
+ 2017 Mattia Rizzolo <mattia@debian.org>
+ 2016-2017 Gregor Riepl <onitake@gmail.com>
+ 2017 Petter Reinholdtsen <pere@debian.org>
 License: BSD-3-clause
 
 Files: debian/tests/*.def.json
 Copyright:
- Copyright (C) 2016-2017 Ultimaker
+ Copyright (C) 2016-2017 Ultimaker B.V.
 License: LGPL-3+
 
 License: BSD-3-clause
