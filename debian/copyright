@@ -27,6 +27,12 @@ Copyright:
  2017 Petter Reinholdtsen <pere@debian.org>
 License: BSD-3-clause
 
+Files: debian/CuraEngine.1
+Copyright:
+ Copyright (C) 2017 Ultimaker B.V.
+ 2017 Gregor Riepl <onitake@gmail.com>
+License: AGPL-3+
+
 Files: debian/tests/*.def.json
 Copyright:
  Copyright (C) 2016-2017 Ultimaker B.V.
