@@ -3,20 +3,19 @@ Upstream-Name: CuraEngine
 Source: https://github.com/Ultimaker/CuraEngine
 
 Files: *
-Copyright:
- Copyright (C) 2013-2017 Ultimaker B.V.
+Copyright: 2013-2017 Ultimaker B.V.
 License: AGPL-3+
 
 Files: libs/clipper/*
-Copyright: Angus Johnson 2010-2014
+Copyright: 2010-2014 Angus Johnson
 License: BSL-1.0
 
 Files: libs/rapidjson/*
-Copyright: Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.
+Copyright: 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 License: MIT
 
 Files: libs/rapidjson/msinttypes/*
-Copyright: Copyright (c) 2006-2013 Alexander Chemeris
+Copyright: 2006-2013 Alexander Chemeris
 License: BSD-3-clause
 
 Files: debian/*
@@ -29,13 +28,12 @@ License: BSD-3-clause
 
 Files: debian/CuraEngine.1
 Copyright:
- Copyright (C) 2017 Ultimaker B.V.
+ 2017 Ultimaker B.V.
  2017 Gregor Riepl <onitake@gmail.com>
 License: AGPL-3+
 
 Files: debian/tests/*.def.json
-Copyright:
- Copyright (C) 2016-2017 Ultimaker B.V.
+Copyright: 2016-2017 Ultimaker B.V.
 License: LGPL-3+
 
 License: BSD-3-clause
