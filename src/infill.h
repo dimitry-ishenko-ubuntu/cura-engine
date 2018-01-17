@@ -31,6 +31,7 @@ class Infill
     double fill_angle; //!< for linear infill types: the angle of the infill lines (or the angle of the grid)
     coord_t z; //!< height of the layer for which we generate infill
     coord_t shift; //!< shift of the scanlines in the direction perpendicular to the fill_angle
+    const Point infill_origin; //!< origin of the infill pattern
     Polygons* perimeter_gaps; //!< (optional output) The areas in between consecutive insets when Concentric infill is used.
     bool connected_zigzags; //!< (ZigZag) Whether endpieces of zigzag infill should be connected to the nearest infill line on both sides of the zigzag connector
     bool use_endpieces; //!< (ZigZag) Whether to include endpieces: zigzag connector segments from one infill line to itself
@@ -38,6 +39,7 @@ class Infill
     int zag_skip_count;  //!< (ZigZag) To skip one zag in every N if skip some zags is enabled
     bool apply_pockets_alternatingly; //!< Whether to add pockets to the cross 3d pattern only at half the intersections of the fractal
     coord_t pocket_size; //!< The size of the pockets at the intersections of the fractal in the cross 3d pattern
+    coord_t minimum_zag_line_length; //!< Throw away perimeters that are too small
 
     static constexpr double one_over_sqrt_2 = 0.7071067811865475244008443621048490392848359376884740; //!< 1.0 / sqrt(2.0)
 public:
@@ -59,6 +61,7 @@ public:
         , double fill_angle
         , int64_t z
         , int64_t shift
+        , const Point& infill_origin = Point()
         , Polygons* perimeter_gaps = nullptr
         , bool connected_zigzags = false
         , bool use_endpieces = false
@@ -66,6 +69,7 @@ public:
         , int zag_skip_count = 0
         , bool apply_pockets_alternatingly = false
         , coord_t pocket_size = 0
+        , coord_t minimum_zag_line_length = DEFAULT_MINIMUM_LINE_LENGTH_THRESHOLD
     )
     : pattern(pattern)
     , zig_zaggify(zig_zaggify)
@@ -77,6 +81,7 @@ public:
     , fill_angle(fill_angle)
     , z(z)
     , shift(shift)
+    , infill_origin(infill_origin)
     , perimeter_gaps(perimeter_gaps)
     , connected_zigzags(connected_zigzags)
     , use_endpieces(use_endpieces)
@@ -84,6 +89,7 @@ public:
     , zag_skip_count(zag_skip_count)
     , apply_pockets_alternatingly(apply_pockets_alternatingly)
     , pocket_size(pocket_size)
+    , minimum_zag_line_length(minimum_zag_line_length)
     {
     }
 
@@ -163,6 +169,12 @@ private:
     void generateTriangleInfill(Polygons& result);
 
     /*!
+     * Generate a triangular grid of infill lines
+     * \param[out] result (output) The resulting lines
+     */
+    void generateTrihexagonInfill(Polygons& result);
+
+    /*!
      * Generate a 3d pattern of subdivided cubes on their points
      * \param[out] result The resulting lines
      * \param[in] mesh Where the Cubic Subdivision Infill precomputation is stored
@@ -204,10 +216,10 @@ private:
      * 
      * \param[out] result (output) The resulting lines
      * \param line_distance The distance between two lines which are in the same direction
-     * \param fill_angle The angle of the generated lines
-     * \param extra_shift extra shift of the scanlines in the direction perpendicular to the fill_angle
+     * \param infill_rotation The angle of the generated lines
+     * \param extra_shift extra shift of the scanlines in the direction perpendicular to the infill_rotation
      */
-    void generateLineInfill(Polygons& result, int line_distance, const double& fill_angle, int64_t extra_shift);
+    void generateLineInfill(Polygons& result, int line_distance, const double& infill_rotation, int64_t extra_shift);
     
     /*!
      * Function for creating linear based infill types (Lines, ZigZag).
@@ -272,9 +284,18 @@ private:
      * 
      * \param[out] result (output) The resulting lines
      * \param line_distance The distance between two lines which are in the same direction
-     * \param fill_angle The angle of the generated lines
+     * \param infill_rotation The angle of the generated lines
      */
-    void generateZigZagInfill(Polygons& result, const int line_distance, const double& fill_angle);
+    void generateZigZagInfill(Polygons& result, const int line_distance, const double& infill_rotation);
+
+    /*!
+     * determine how far the infill pattern should be shifted based on the values of infill_origin and \p infill_rotation
+     *
+     * \param[in] infill_rotation the angle the infill pattern is rotated through
+     *
+     * \return the distance the infill pattern should be shifted
+     */
+    int64_t getShiftOffsetFromInfillOriginAndRotation(const double& infill_rotation);
 };
 
 }//namespace cura
