@@ -5,7 +5,7 @@ Description: Depend on system rapidjson and polyclipping.
   packages of these libraries, so use those instead.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -51,9 +51,14 @@
+@@ -55,9 +55,14 @@
      endif()
  endif()
  
@@ -22,7 +22,7 @@ Description: Depend on system rapidjson and polyclipping.
  
  set(engine_SRCS # Except main.cpp.
      src/bridge.cpp
-@@ -149,7 +154,7 @@
+@@ -154,7 +159,7 @@
  
  # Compiling CuraEngine itself.
  add_library(_CuraEngine ${engine_SRCS} ${engine_PB_SRCS}) #First compile all of CuraEngine as library, allowing this to be re-used for tests.

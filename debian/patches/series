@@ -1,4 +1,2 @@
-1000-64-bit-safe-stringtest.patch
 2000-remove-rpath.patch
-2010-add-executable-version.patch
 2020-system-rapidjson.patch
