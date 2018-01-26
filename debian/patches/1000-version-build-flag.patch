@@ -1,0 +1,17 @@
+Description: Added missing version flag to CuraEngine build target
+ The main.cpp needs to be compiled with the VERSION macro to
+ make CuraEngine display its version correctly.
+ This patch fixes the build script so the macro is passed in.
+Author: Gregor Riepl <onitake@gmail.com>
+Bug: https://github.com/Ultimaker/CuraEngine/issues/691
+Last-Update: 2018-01-26
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -167,6 +167,7 @@
+ endif()
+ add_executable(CuraEngine src/main.cpp) #Then compile main.cpp as separate executable, and link the library to it.
+ target_link_libraries(CuraEngine _CuraEngine)
++set_target_properties(CuraEngine PROPERTIES COMPILE_DEFINITIONS "VERSION=\"${CURA_ENGINE_VERSION}\"")
+ 
+ # Compiling the test environment.
+ if (BUILD_TESTS)
