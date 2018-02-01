@@ -1,8 +1,8 @@
-cura-engine (1:3.1.0-2) UNRELEASED; urgency=medium
+cura-engine (1:3.1.0-2) unstable; urgency=medium
 
   * Fixed profiles for autopkgtest (Closes: #889004)
 
- -- Gregor Riepl <onitake@gmail.com>  Thu, 01 Feb 2018 08:30:46 +0100
+ -- Gregor Riepl <onitake@gmail.com>  Thu, 01 Feb 2018 08:36:23 +0100
 
 cura-engine (1:3.1.0-1) unstable; urgency=medium
 
