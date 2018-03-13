@@ -1,6 +1,4 @@
 #!/usr/bin/make -f
-# See debhelper(7) (uncomment to enable)
-# output every command that modifies files on the build system.
 export DH_VERBOSE = 1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
@@ -8,7 +6,7 @@ include /usr/share/dpkg/buildflags.mk
 include /usr/share/dpkg/pkg-info.mk
 
 %:
-	dh $@ --buildsystem=cmake --parallel
+	dh $@ --buildsystem=cmake
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCURA_ENGINE_VERSION:STRING=$(DEB_VERSION_UPSTREAM) -DBUILD_TESTS=ON
