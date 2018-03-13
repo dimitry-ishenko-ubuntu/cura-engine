@@ -1,4 +1,3 @@
-//Copyright (C) 2013 Ultimaker
 //Copyright (c) 2017 Ultimaker B.V.
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
@@ -37,6 +36,7 @@ GCodeExport::GCodeExport()
 
     isZHopped = 0;
     setFlavor(EGCodeFlavor::MARLIN);
+    firmware_retract = false;
     initial_bed_temp = 0;
 
     extruder_count = 0;
@@ -51,6 +51,7 @@ GCodeExport::~GCodeExport()
 void GCodeExport::preSetup(const MeshGroup* meshgroup)
 {
     setFlavor(meshgroup->getSettingAsGCodeFlavor("machine_gcode_flavor"));
+    firmware_retract = meshgroup->getSettingBoolean("machine_firmware_retract");
     use_extruder_offset_to_offset_coords = meshgroup->getSettingBoolean("machine_use_extruder_offset_to_offset_coords");
 
     extruder_count = meshgroup->getSettingAsCount("machine_extruder_count");
@@ -263,15 +264,6 @@ void GCodeExport::setFlavor(EGCodeFlavor flavor)
     else
     {
         is_volumatric = false;
-    }
-
-    if (flavor == EGCodeFlavor::BFB || flavor == EGCodeFlavor::MARLIN_VOLUMATRIC || flavor == EGCodeFlavor::ULTIGCODE)
-    {
-        firmware_retract = true;
-    }
-    else 
-    {
-        firmware_retract = false;
     }
 }
 
@@ -493,31 +485,28 @@ void GCodeExport::writeExtrusionMode(bool set_relative_extrusion_mode)
 {
     if (set_relative_extrusion_mode)
     {
-        *output_stream << "M83 ; relative extrusion mode" << new_line;
+        *output_stream << "M83 ;relative extrusion mode" << new_line;
     }
     else
     {
-        *output_stream << "M82 ; absolute extrusion mode" << new_line;
+        *output_stream << "M82 ;absolute extrusion mode" << new_line;
     }
 }
 
 void GCodeExport::resetExtrusionValue()
 {
-    if (flavor != EGCodeFlavor::MAKERBOT && flavor != EGCodeFlavor::BFB)
+    if (!relative_extrusion)
     {
-        if (!relative_extrusion)
-        {
-            *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
-        }
-        double current_extruded_volume = getCurrentExtrudedVolume();
-        extruder_attr[current_extruder].totalFilament += current_extruded_volume;
-        for (double& extruded_volume_at_retraction : extruder_attr[current_extruder].extruded_volume_at_previous_n_retractions)
-        { // update the extruded_volume_at_previous_n_retractions only of the current extruder, since other extruders don't extrude the current volume
-            extruded_volume_at_retraction -= current_extruded_volume;
-        }
-        current_e_value = 0.0;
-        extruder_attr[current_extruder].retraction_e_amount_at_e_start = extruder_attr[current_extruder].retraction_e_amount_current;
+        *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
     }
+    double current_extruded_volume = getCurrentExtrudedVolume();
+    extruder_attr[current_extruder].totalFilament += current_extruded_volume;
+    for (double& extruded_volume_at_retraction : extruder_attr[current_extruder].extruded_volume_at_previous_n_retractions)
+    { // update the extruded_volume_at_previous_n_retractions only of the current extruder, since other extruders don't extrude the current volume
+        extruded_volume_at_retraction -= current_extruded_volume;
+    }
+    current_e_value = 0.0;
+    extruder_attr[current_extruder].retraction_e_amount_at_e_start = extruder_attr[current_extruder].retraction_e_amount_current;
 }
 
 void GCodeExport::writeDelay(double timeAmount)
@@ -628,7 +617,7 @@ void GCodeExport::writeTravel(int x, int y, int z, double speed)
     assert(speed < 400 && speed > 1); // normal F values occurring in UM2 gcode (this code should not be compiled for release)
     assert(currentPosition != no_point3);
     assert(Point3(x, y, z) != no_point3);
-    assert((Point3(x,y,z) - currentPosition).vSize() < MM2INT(300)); // no crazy positions (this code should not be compiled for release)
+    assert((Point3(x,y,z) - currentPosition).vSize() < MM2INT(400)); // no crazy positions (this code should not be compiled for release)
 #endif //ASSERT_INSANE_OUTPUT
 
     const PrintFeatureType travel_move_type = extruder_attr[current_extruder].retraction_e_amount_current ? PrintFeatureType::MoveRetraction : PrintFeatureType::MoveCombing;
@@ -636,7 +625,7 @@ void GCodeExport::writeTravel(int x, int y, int z, double speed)
     CommandSocket::sendLineTo(travel_move_type, Point(x, y), display_width, layer_height, speed);
 
     *output_stream << "G0";
-    writeFXYZE(speed, x, y, z, current_e_value, PrintFeatureType::MoveCombing);
+    writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
 }
 
 void GCodeExport::writeExtrusion(int x, int y, int z, double speed, double extrusion_mm3_per_mm, PrintFeatureType feature, bool update_extrusion_offset)
@@ -648,7 +637,7 @@ void GCodeExport::writeExtrusion(int x, int y, int z, double speed, double extru
     assert(speed < 400 && speed > 1); // normal F values occurring in UM2 gcode (this code should not be compiled for release)
     assert(currentPosition != no_point3);
     assert(Point3(x, y, z) != no_point3);
-    assert((Point3(x,y,z) - currentPosition).vSize() < MM2INT(300)); // no crazy positions (this code should not be compiled for release)
+    assert((Point3(x,y,z) - currentPosition).vSize() < MM2INT(400)); // no crazy positions (this code should not be compiled for release)
     assert(extrusion_mm3_per_mm >= 0.0);
 #endif //ASSERT_INSANE_OUTPUT
 
@@ -756,7 +745,7 @@ void GCodeExport::writeUnretractionAndPrime()
             currentSpeed = extruder_attr[current_extruder].last_retraction_prime_speed;
             estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::MoveRetraction);
         }
-        if (getCurrentExtrudedVolume() > 10000.0) //According to https://github.com/Ultimaker/CuraEngine/issues/14 having more then 21m of extrusion causes inaccuracies. So reset it every 10m, just to be sure.
+        if (getCurrentExtrudedVolume() > 10000.0 && flavor != EGCodeFlavor::BFB && flavor != EGCodeFlavor::MAKERBOT) //According to https://github.com/Ultimaker/CuraEngine/issues/14 having more then 21m of extrusion causes inaccuracies. So reset it every 10m, just to be sure.
         {
             resetExtrusionValue();
         }
@@ -917,7 +906,7 @@ void GCodeExport::startExtruder(int new_extruder)
     CommandSocket::setExtruderForSend(new_extruder);
     CommandSocket::setSendCurrentPosition( getPositionXY() );
 
-    //Change the Z position so it gets re-writting again. We do not know if the switch code modified the Z position.
+    //Change the Z position so it gets re-written again. We do not know if the switch code modified the Z position.
     currentPosition.z += 1;
 }
 
@@ -1134,7 +1123,7 @@ void GCodeExport::writeMaxZFeedrate(double max_z_feedrate)
 {
     if (current_max_z_feedrate != max_z_feedrate)
     {
-        if (getFlavor() == EGCodeFlavor::REPRAP)
+        if (getFlavor() == EGCodeFlavor::REPRAP || getFlavor() == EGCodeFlavor::REPETIER)
         {
             *output_stream << "M203 Z" << PrecisionedDouble{2, max_z_feedrate * 60} << new_line;
         }
