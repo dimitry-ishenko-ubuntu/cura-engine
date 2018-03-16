@@ -1,8 +1,8 @@
-cura-engine (1:3.2.1-1) UNRELEASED; urgency=medium
+cura-engine (1:3.2.1-1) unstable; urgency=medium
 
   * New upstream release 3.2.1
 
- -- Gregor Riepl <onitake@gmail.com>  Tue, 13 Mar 2018 19:52:45 +0100
+ -- Gregor Riepl <onitake@gmail.com>  Fri, 16 Mar 2018 08:58:08 +0100
 
 cura-engine (1:3.1.0-2) unstable; urgency=medium
 
