@@ -11,10 +11,25 @@ if (ENABLE_ARCUS)
     add_definitions(-DARCUS)
 endif ()
 
+
+option(USE_SYSTEM_LIBS "Use the system libraries if available" OFF)
+
+if(USE_SYSTEM_LIBS)
+    set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+    find_package(RapidJSON CONFIG REQUIRED)
+    find_package(Polyclipping REQUIRED)
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG_INIT})
+else()
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE_INIT})
+endif()
+
 if(NOT ${CMAKE_VERSION} VERSION_LESS 3.1)
     set(CMAKE_CXX_STANDARD 11)
 else()
-    set(CMAKE_CXX_FLAGS "-std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -62,9 +77,12 @@ if (ENABLE_OPENMP)
     endif()
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} libs)
-
-add_library(clipper STATIC libs/clipper/clipper.cpp)
+if(USE_SYSTEM_LIBS)
+    include_directories(${Polyclipping_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${RAPIDJSON_INCLUDE_DIRS})
+else()
+    include_directories(${CMAKE_CURRENT_BINARY_DIR} libs libs/clipper)
+    add_library(clipper STATIC libs/clipper/clipper.cpp)
+endif()
 
 set(engine_SRCS # Except main.cpp.
     src/bridge.cpp
@@ -126,7 +144,6 @@ set(engine_SRCS # Except main.cpp.
     src/settings/SettingRegistry.cpp
     src/settings/settings.cpp
     src/settings/AdaptiveLayerHeights.cpp
-    src/settings/AdaptiveLayerHeights.h
 
     src/utils/AABB.cpp
     src/utils/AABB3D.cpp
@@ -141,6 +158,7 @@ set(engine_SRCS # Except main.cpp.
     src/utils/polygonUtils.cpp
     src/utils/polygon.cpp
     src/utils/ProximityPointLink.cpp
+    src/utils/SVG.cpp
     src/utils/socket.cpp
     src/utils/SpaceFillingTree.cpp
 )
@@ -156,27 +174,51 @@ set(engine_TEST_UTILS
     PolygonUtilsTest
     PolygonTest
     StringTest
+    UnionFindTest
 )
 
 # Generating ProtoBuf protocol
 if (ENABLE_ARCUS)
-protobuf_generate_cpp(engine_PB_SRCS engine_PB_HEADERS Cura.proto)
+    protobuf_generate_cpp(engine_PB_SRCS engine_PB_HEADERS Cura.proto)
 endif ()
 
 # Compiling CuraEngine itself.
 add_library(_CuraEngine ${engine_SRCS} ${engine_PB_SRCS}) #First compile all of CuraEngine as library, allowing this to be re-used for tests.
-target_link_libraries(_CuraEngine clipper)
+
+if(USE_SYSTEM_LIBS)
+    target_link_libraries(_CuraEngine ${Polyclipping_LIBRARIES})
+else()
+    target_link_libraries(_CuraEngine clipper)
+endif()
+
 if (ENABLE_ARCUS)
     target_link_libraries(_CuraEngine Arcus)
 endif ()
 
 set_target_properties(_CuraEngine PROPERTIES COMPILE_DEFINITIONS "VERSION=\"${CURA_ENGINE_VERSION}\"")
 
+if(WIN32)
+  message(STATUS "Using windres")
+  set(RES_FILES "CuraEngine.rc")
+  set(CMAKE_RC_COMPILER_INIT windres)
+  ENABLE_LANGUAGE(RC)
+  SET(CMAKE_RC_COMPILE_OBJECT
+      "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>"
+      )
+endif(WIN32)
+
 if (UNIX)
     target_link_libraries(_CuraEngine pthread)
 endif()
-add_executable(CuraEngine src/main.cpp) #Then compile main.cpp as separate executable, and link the library to it.
+
+if (NOT WIN32)
+  add_executable(CuraEngine src/main.cpp) # Then compile main.cpp as separate executable, and link the library to it.
+else()
+  add_executable(CuraEngine src/main.cpp ${RES_FILES}) # ..., but don't forget the glitter!
+endif(NOT WIN32)
+
 target_link_libraries(CuraEngine _CuraEngine)
+set_target_properties(CuraEngine PROPERTIES COMPILE_DEFINITIONS "VERSION=\"${CURA_ENGINE_VERSION}\"")
 
 # Compiling the test environment.
 if (BUILD_TESTS)
