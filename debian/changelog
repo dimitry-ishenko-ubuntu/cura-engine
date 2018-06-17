@@ -1,3 +1,12 @@
+cura-engine (1:3.3.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release 3.3.0
+  * Migrated to salsa
+  * Removed obsolete CMakeLists.txt patches, issues were fixed upstream
+  * Fixed fortify/debug build flags
+
+ -- Gregor Riepl <onitake@gmail.com>  Sat, 16 Jun 2018 22:19:38 +0200
+
 cura-engine (1:3.2.1-1) unstable; urgency=medium
 
   * New upstream release 3.2.1
