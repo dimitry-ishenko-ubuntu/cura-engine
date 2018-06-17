@@ -4,7 +4,7 @@ Description: Remove RPATH from build flags.
   See: https://wiki.debian.org/RpathIssue
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -24,7 +24,6 @@
+@@ -39,7 +39,6 @@
  if(NOT DEFINED LIB_SUFFIX)
      set(LIB_SUFFIX "")
  endif()
