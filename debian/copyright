@@ -3,7 +3,7 @@ Upstream-Name: CuraEngine
 Source: https://github.com/Ultimaker/CuraEngine
 
 Files: *
-Copyright: 2013-2017 Ultimaker B.V.
+Copyright: 2013-2018 Ultimaker B.V.
 License: AGPL-3+
 
 Files: libs/clipper/*
