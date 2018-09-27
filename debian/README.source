@@ -41,37 +41,21 @@ Packaging instructions (1 and 2 only need to be done once):
 
   $ quilt pop -a; rm -rf .pc
 
-5.  Update the test cases.
-
-  Each Cura release usually introduces new slicer options, so the printer
-  definitions for the test cases need to be updated as well.
-  Copy fdmextruder.def.json and fdmprinter.def.json from the main Cura
-  repository into debian/tests/ then commit the changes.
-
-6.  Build against the upstream tree:
+5.  Build against the upstream tree:
 
   $ gbp buildpackage -us -uc
 
-7.  Verify that you don't have any lintian warnings:
+6.  Verify that you don't have any lintian warnings:
 
   $ linitian -I
 
-8.  Verify that the integration test succeeds:
-
-  $ debian/cura-engine/usr/bin/CuraEngine slice \
-    -j debian/tests/fdmprinter.def.json \
-    -l tests/testModel.stl \
-    -o /tmp/foo.gcode
-
-  There should be no errors (warnings are ok).
-
-9.  Merge your changes back into the debian tree, tag and push everything:
+7.  Merge your changes back into the debian tree, tag and push everything:
 
   $ gbp buildpackage --git-tag --git-sign-tags
   $ git push origin master upstream pristine-tar
   $ git push --tags origin
 
-19. Sign your package and release using dput or whichever method you prefer:
+8.  Sign your package and release using dput or whichever method you prefer:
 
   $ debsign
   $ dput <RELEASE_REPOSITORY> ../cura-engine_<VERSION>.changes
