@@ -8,11 +8,11 @@ This entire directory doesn't exist.
  CMakeLists.txt | 5 -----
  1 file changed, 5 deletions(-)
 
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 5c579388..4c55e6f3 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -251,11 +251,6 @@ if (BUILD_TESTS)
+Index: CuraEngine/CMakeLists.txt
+===================================================================
+--- CuraEngine.orig/CMakeLists.txt	2019-08-15 12:38:13.452473389 +0200
++++ CuraEngine/CMakeLists.txt	2019-08-15 12:38:13.448473291 +0200
+@@ -243,11 +243,6 @@
      endforeach()
  endif()
  
@@ -24,6 +24,3 @@ index 5c579388..4c55e6f3 100644
  # Installing CuraEngine.
  include(GNUInstallDirs)
  install(TARGETS CuraEngine DESTINATION ${CMAKE_INSTALL_BINDIR})
--- 
-2.11.0
-
