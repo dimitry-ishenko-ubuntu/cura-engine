@@ -1,4 +1,4 @@
-//Copyright (c) 2017 Ultimaker B.V.
+//Copyright (c) 2018 Ultimaker B.V.
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef UTILS_POLYGON_H
@@ -16,7 +16,8 @@
 
 #include <initializer_list>
 
-#include "intpoint.h"
+#include "IntPoint.h"
+#include "../settings/types/AngleDegrees.h" //For angles between vertices.
 
 #define CHECK_POLY_ACCESS
 #ifdef CHECK_POLY_ACCESS
@@ -139,7 +140,7 @@ public:
         return length;
     }
 
-    bool shorterThan(int64_t check_length) const;
+    bool shorterThan(const coord_t check_length) const;
 
     Point min() const
     {
@@ -262,7 +263,7 @@ public:
      * \param shortcut_length The desired length of the shortcut line segment introduced (shorter shortcuts may be unavoidable)
      * \param result The resulting polygon
      */
-    void smooth_outward(float angle, int shortcut_length, PolygonRef result) const;
+    void smooth_outward(const AngleDegrees angle, int shortcut_length, PolygonRef result) const;
 
     /*!
      * Smooth out the polygon and store the result in \p result.
@@ -350,15 +351,29 @@ public:
     : ConstPolygonRef(polygon)
     {}
 
+    PolygonRef(const PolygonRef& other)
+    : ConstPolygonRef(*other.path)
+    {}
+
     virtual ~PolygonRef()
     {
     }
 
+    void reserve(size_t min_size)
+    {
+        path->reserve(min_size);
+    }
+
     PolygonRef& operator=(const ConstPolygonRef& other) =delete; // polygon assignment is expensive and probably not what you want when you use the assignment operator
-//     {
-//         *path = *other.path;
-//         return *this;
-//     }
+
+    PolygonRef& operator=(ConstPolygonRef& other) =delete; // polygon assignment is expensive and probably not what you want when you use the assignment operator
+//     { path = other.path; return *this; }
+
+    PolygonRef& operator=(PolygonRef&& other)
+    {
+        *path = std::move(*other.path);
+        return *this;
+    }
 
     Point& operator[] (unsigned int index)
     {
@@ -391,8 +406,6 @@ public:
         path->push_back(p);
     }
 
-    PolygonRef& operator=(ConstPolygonRef& other) { path = other.path; return *this; }
-
     ClipperLib::Path& operator*()
     {
         return *path;
@@ -406,7 +419,7 @@ public:
 
     void remove(unsigned int index)
     {
-        POLY_ASSERT(index < size() && index <= std::numeric_limits<int>::max());
+        POLY_ASSERT(index < size() && index <= static_cast<unsigned int>(std::numeric_limits<int>::max()));
         path->erase(path->begin() + index);
     }
 
@@ -442,7 +455,7 @@ public:
      * \param smallest_line_segment_squared maximal squared length of removed line segments
      * \param allowed_error_distance_squared The square of the distance of the middle point to the line segment of the consecutive and previous point for which the middle point is removed
      */
-    void simplify(int smallest_line_segment_squared = 100, int allowed_error_distance_squared = 25);
+    void simplify(const coord_t smallest_line_segment_squared = 100, const coord_t allowed_error_distance_squared = 25);
 
     void pop_back()
     { 
@@ -485,6 +498,11 @@ public:
     operator bool() const
     {
         return path;
+    }
+
+    bool operator==(const ConstPolygonPointer& rhs)
+    {
+        return path == rhs.path;
     }
 };
 
@@ -530,7 +548,13 @@ public:
     {
     }
 
-    Polygon(ConstPolygonRef& other)
+    Polygon(const ConstPolygonRef& other)
+    : PolygonRef(poly)
+    , poly(*other.path)
+    {
+    }
+
+    Polygon(const Polygon& other)
     : PolygonRef(poly)
     , poly(*other.path)
     {
@@ -546,9 +570,16 @@ public:
     {
     }
 
-    Polygon& operator=(const ConstPolygonRef& other)
+    Polygon& operator=(const ConstPolygonRef& other) = delete; // copying a single polygon is generally not what you want
+//     {
+//         path = other.path;
+//         poly = *other.path;
+//         return *this;
+//     }
+
+    Polygon& operator=(Polygon&& other) //!< move assignment
     {
-        path = other.path;
+        poly = std::move(other.poly);
         return *this;
     }
 };
@@ -579,12 +610,12 @@ public:
 
     PolygonRef operator[] (unsigned int index)
     {
-        POLY_ASSERT(index < size() && index <= std::numeric_limits<int>::max());
+        POLY_ASSERT(index < size() && index <= static_cast<unsigned int>(std::numeric_limits<int>::max()));
         return paths[index];
     }
     ConstPolygonRef operator[] (unsigned int index) const
     {
-        POLY_ASSERT(index < size() && index <= std::numeric_limits<int>::max());
+        POLY_ASSERT(index < size() && index <= static_cast<unsigned int>(std::numeric_limits<int>::max()));
         return paths[index];
     }
     ClipperLib::Paths::iterator begin()
@@ -610,7 +641,7 @@ public:
      */
     void remove(unsigned int index)
     {
-        POLY_ASSERT(index < size() && index <= std::numeric_limits<int>::max());
+        POLY_ASSERT(index < size() && index <= static_cast<unsigned int>(std::numeric_limits<int>::max()));
         if (index < paths.size() - 1)
         {
             paths[index] = std::move(paths.back());
@@ -642,15 +673,14 @@ public:
     }
     void add(const Polygons& other)
     {
-        for(unsigned int n=0; n<other.paths.size(); n++)
-            paths.push_back(other.paths[n]);
+        std::copy(other.paths.begin(), other.paths.end(), std::back_inserter(paths));
     }
     /*!
      * Add a 'polygon' consisting of two points
      */
     void addLine(const Point from, const Point to)
     {
-        paths.emplace_back((std::initializer_list<Point>){from, to});
+        paths.emplace_back(ClipperLib::Path{from, to});
     }
 
     template<typename... Args>
@@ -676,7 +706,9 @@ public:
     Polygons() {}
 
     Polygons(const Polygons& other) { paths = other.paths; }
+    Polygons(Polygons&& other) { paths = std::move(other.paths); }
     Polygons& operator=(const Polygons& other) { paths = other.paths; return *this; }
+    Polygons& operator=(Polygons&& other) { paths = std::move(other.paths); return *this; }
 
     bool operator==(const Polygons& other) const =delete;
 
@@ -729,16 +761,14 @@ public:
     /*!
      * Clips input line segments by this Polygons.
      * \param other Input line segments to be cropped
-     * \return the resulting interior line segments
+     * \param segment_tree the resulting interior line segments
      */
-    ClipperLib::PolyTree lineSegmentIntersection(const Polygons& other) const
+    void lineSegmentIntersection(const Polygons& other, ClipperLib::PolyTree& segment_tree) const
     {
-        ClipperLib::PolyTree ret;
         ClipperLib::Clipper clipper(clipper_init);
         clipper.AddPaths(paths, ClipperLib::ptClip, true);
         clipper.AddPaths(other.paths, ClipperLib::ptSubject, false);
-        clipper.Execute(ClipperLib::ctIntersection, ret);
-        return ret;
+        clipper.Execute(ClipperLib::ctIntersection, segment_tree);
     }
     Polygons xorPolygons(const Polygons& other) const
     {
@@ -847,22 +877,33 @@ public:
      * \param shortcut_length The desired length of the shortcut line segment introduced (shorter shortcuts may be unavoidable)
      * \return The resulting polygons
      */
-    Polygons smooth_outward(float angle, int shortcut_length);
+    Polygons smooth_outward(const AngleDegrees angle, int shortcut_length);
 
     Polygons smooth2(int remove_length, int min_area) const; //!< removes points connected to small lines
     
     /*!
-     * removes points connected to similarly oriented lines
-     * 
-     * \param smallest_line_segment maximal length of removed line segments
-     * \param allowed_error_distance The distance of the middle point to the line segment of the consecutive and previous point for which the middle point is removed
+     * Removes vertices of the polygons to make sure that they are not too high
+     * resolution.
+     *
+     * This removes points which are connected to line segments that are shorter
+     * than the `smallest_line_segment`, unless that would introduce a deviation
+     * in the contour of more than `allowed_error_distance`.
+     *
+     * Vertices which introduce an error of less than 5 microns are removed
+     * anyway, even if the segments are longer than the smallest line segment.
+     * This makes sure that (practically) colinear line segments are joined into
+     * a single line segment.
+     * \param smallest_line_segment Maximal length of removed line segments.
+     * \param allowed_error_distance If removing a vertex introduces a deviation
+     * from the original path that is more than this distance, the vertex may
+     * not be removed.
      */
-    void simplify(int smallest_line_segment = 10, int allowed_error_distance = 5) 
+    void simplify(const coord_t smallest_line_segment = 10, const coord_t allowed_error_distance = 5) 
     {
-        int allowed_error_distance_squared = allowed_error_distance * allowed_error_distance;
-        int smallest_line_segment_squared = smallest_line_segment * smallest_line_segment;
+        const coord_t allowed_error_distance_squared = allowed_error_distance * allowed_error_distance;
+        const coord_t smallest_line_segment_squared = smallest_line_segment * smallest_line_segment;
         Polygons& thiss = *this;
-        for (unsigned int p = 0; p < size(); p++)
+        for (size_t p = 0; p < size(); p++)
         {
             thiss[p].simplify(smallest_line_segment_squared, allowed_error_distance_squared);
             if (thiss[p].size() < 3)
@@ -927,7 +968,7 @@ public:
      * Removes polygons with area smaller than \p minAreaSize (note that minAreaSize is in mm^2, not in micron^2).
      */
     void removeSmallAreas(double minAreaSize)
-    {               
+    {
         Polygons& thiss = *this;
         for(unsigned int i=0; i<size(); i++)
         {
@@ -1120,15 +1161,15 @@ public:
  * This class has little more functionality than Polygons, but serves to show that a specific instance is ordered such that the first Polygon is the outline and the rest are holes.
  */
 class PolygonsPart : public Polygons
-{   
+{
 public:
     PolygonRef outerPolygon()
     {
-        return this->paths[0];
+        return paths[0];
     }
     ConstPolygonRef outerPolygon() const
     {
-        return this->paths[0];
+        return paths[0];
     }
 
     /*!
