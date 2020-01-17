@@ -1,4 +1,6 @@
-/** Copyright (C) 2015 Ultimaker - Released under terms of the AGPLv3 License */
+//Copyright (c) 2019 Ultimaker B.V.
+//CuraEngine is released under the terms of the AGPLv3 or higher.
+
 #ifndef UTILS_POLYGON_UTILS_H
 #define UTILS_POLYGON_UTILS_H
 
@@ -35,7 +37,44 @@ struct ClosestPolygonPoint
     {
         return point_idx != NO_INDEX;
     }
+    bool operator==(const ClosestPolygonPoint& rhs)
+    {
+        // no need to compare on poy_idx
+        // it's sometimes unused while poly is always initialized
+        return poly == rhs.poly && point_idx == rhs.point_idx && location == rhs.location;
+    }
 };
+
+} // namespace cura
+
+namespace std
+{
+template <>
+struct hash<cura::ClosestPolygonPoint>
+{
+    size_t operator()(const cura::ClosestPolygonPoint& cpp) const
+    {
+        return std::hash<cura::Point>()(cpp.p());
+    }
+};
+}//namespace std
+
+
+namespace std
+{
+template <typename S, typename T>
+struct hash<std::pair<S, T>>
+{
+    size_t operator()(const std::pair<S, T>& pair) const
+    {
+        return 31 * std::hash<S>()(pair.first) + 59 * std::hash<T>()(pair.second);
+    }
+};
+}//namespace std
+
+
+namespace cura
+{
 
 /*!
  * A point within a polygon and the index of which segment in the polygon the point lies on.
@@ -288,18 +327,31 @@ public:
     static ClosestPolygonPoint ensureInsideOrOutside(const Polygons& polygons, Point& from, const ClosestPolygonPoint& closest_polygon_point, int preferred_dist_inside, const Polygons* loc_to_line_polygons = nullptr, const LocToLineGrid* loc_to_line_grid = nullptr, const std::function<int(Point)>& penalty_function = no_penalty_function);
 
     /*!
+     * Find a connecting line segment from one polygon to a collection of other polygons.
+     * 
+     * This implementation uses a sparse grid to get to an accurate result quickly
+     * 
+     * The first connection larger than \p min_connection_length and smaller than \p max_connection_length is returned.
+     * 
+     * \param poly1 The polygon in which to search for a conection
+     * \param polys2 The polygons to which to connect
+     * \param min_connection_length The minimal conection length a connection needs to have in order to stop looking for other connections
+     * \param max_connection_length The largest length of a connection to be found
+     */
+    static std::pair<ClosestPolygonPoint, ClosestPolygonPoint> findConnection(ConstPolygonRef poly1, Polygons& polys2, coord_t min_connection_length, coord_t max_connection_length, std::function<bool (std::pair<ClosestPolygonPoint, ClosestPolygonPoint>)> precondition);
+
+    /*!
     * Find the two points in two polygons with the smallest distance.
     * 
-    * Note: The amount of preliminary distance checks is quadratic in \p sample_size : `O(sample_size ^2)`.
-    * Further convergence time depends on polygon size and shape.
+    * The final connection will be close to the center of mass of the first polygon.
     * 
     * \warning The ClosestPolygonPoint::poly fields output parameters should be initialized with the polygons for which to find the smallest connection.
     * 
     * \param poly1_result Output parameter: the point at the one end of the smallest connection between its poly and \p poly2_result.poly.
     * \param poly2_result Output parameter: the point at the other end of the smallest connection between its poly and \p poly1_result.poly.
-    * \param sample_size The number of points on each polygon to start the hill climbing search from. 
+    * \param sample_size The number of points on each polygon to start the hill climbing search from. Use negative values for checking all combinations of points.
     */
-    static void findSmallestConnection(ClosestPolygonPoint& poly1_result, ClosestPolygonPoint& poly2_result, int sample_size);
+    static void findSmallestConnection(ClosestPolygonPoint& poly1_result, ClosestPolygonPoint& poly2_result);
 
     /*!
     * 
@@ -429,6 +481,19 @@ public:
     static bool getNextPointWithDistance(Point from, int64_t dist, ConstPolygonRef poly, int start_idx, int poly_start_idx, GivenDistPoint& result);
 
 
+    /*!
+     * Get the point on a polygon which intersects a line parallel to a line going through the starting point and through another point.
+     * 
+     * Note that the looking direction \p forward doesn't neccesarily determine on which side of the line we cross a parallel line.
+     * Depending on the geometry of the polygon the next intersection may be left or right of the input line.
+     * 
+     * \param start The starting point of the search and the starting point of the line
+     * \param line_to The end point of the line
+     * \param dist The distance from the parallel line to the line defined by the previous two parameters
+     * \param forward Whether to look forward from \p start in the direction of the polygon, or go in the other direction.
+     * \return The earliest point on the polygon in the given direction which crosses a line parallel to the given one at the distance \p dist - if any
+     */
+    static std::optional<ClosestPolygonPoint> getNextParallelIntersection(const ClosestPolygonPoint& start, const Point& line_to, const coord_t dist, const bool forward);
 
     /*!
      * Checks whether a given line segment collides with a given polygon(s).
@@ -534,6 +599,21 @@ public:
      * \param[in] max_gap Polygons must be closer together than this distance to be considered adjacent.
      */
     static void findAdjacentPolygons(std::vector<unsigned>& adjacent_poly_indices, const ConstPolygonRef& poly, const std::vector<ConstPolygonPointer>& possible_adjacent_polys, const coord_t max_gap);
+
+    /*!
+     * Calculate the Hamming Distance between two polygons relative to their own
+     * surface areas.
+     *
+     * The Hamming Distance applied to polygons is interpreted as the area of
+     * the symmetric difference between the polygons. In this case, we'll
+     * divide this area by the total area of the two polygons.
+     * \param poly_a One of the polygons to compute the distance between.
+     * \param poly_b One of the polygons to compute the distance between.
+     * \return The Hamming Distance relative to the total surface area of the
+     * two polygons. This will be between 0.0 (the polygons are exactly equal)
+     * and 1.0 (the polygons are completely disjunct).
+     */
+    static double relativeHammingDistance(const Polygons& poly_a, const Polygons& poly_b);
 
 private:
     /*!
