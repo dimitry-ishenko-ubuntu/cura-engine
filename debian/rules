@@ -4,6 +4,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 include /usr/share/dpkg/pkg-info.mk
+export DEB_VERSION_UPSTREAM
 
 %:
 	dh $@ --buildsystem=cmake

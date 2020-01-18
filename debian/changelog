@@ -2,6 +2,7 @@ cura-engine (1:4.4.1-1) UNRELEASED; urgency=medium
 
   * New upstream version.
   * Bump libarcus dependency to 4.4.
+  * Fix test that expected the package version to be "master".
 
  -- Christoph Berg <myon@debian.org>  Fri, 17 Jan 2020 22:40:07 +0100
 
