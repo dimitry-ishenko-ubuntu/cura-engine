@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 10), cmake (>=2.8.12),
  libcppunit-dev,
  protobuf-compiler (>=3.0.0), libprotobuf-dev,
  rapidjson-dev, libpolyclipping-dev,
- libarcus-dev (>=3.3.0)
+ libarcus-dev (>= 4.4.0),
 Standards-Version: 4.1.4
 Section: utils
 Homepage: https://github.com/Ultimaker/CuraEngine
