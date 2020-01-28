@@ -1,11 +1,12 @@
-cura-engine (1:4.4.1-1) UNRELEASED; urgency=medium
+cura-engine (1:4.4.1-1) unstable; urgency=medium
 
+  * Team upload.
   * New upstream version.
   * Bump libarcus dependency to 4.4.
   * Add libstb and libgmock dependencies.
   * Fix test that expected the package version to be "master".
 
- -- Christoph Berg <myon@debian.org>  Fri, 17 Jan 2020 22:40:07 +0100
+ -- Christoph Berg <myon@debian.org>  Tue, 28 Jan 2020 22:09:46 +0100
 
 cura-engine (1:3.3.0-3) unstable; urgency=medium
 
