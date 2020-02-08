@@ -1,0 +1,64 @@
+From 4d049c4727ffeb0259738ef183eda34b00e32345 Mon Sep 17 00:00:00 2001
+From: Remco Burema <r.burema@ultimaker.com>
+Date: Fri, 7 Feb 2020 13:05:36 +0100
+Subject: [PATCH] Be more compliant with non-x86 architectures.
+
+Replace integer-like uses of char with int16_t, as char can be unsigned by default on some architectures (which means -1 cant be used as a signaling value).
+Should fix #1193 at least.
+---
+ src/utils/PolygonConnector.cpp | 4 ++--
+ src/utils/PolygonConnector.h   | 2 +-
+ src/utils/polygonUtils.cpp     | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/utils/PolygonConnector.cpp b/src/utils/PolygonConnector.cpp
+index 14ea0be2..d5b8b081 100644
+--- a/src/utils/PolygonConnector.cpp
++++ b/src/utils/PolygonConnector.cpp
+@@ -81,7 +81,7 @@ void PolygonConnector::addPolygonSegment(const ClosestPolygonPoint& start, const
+     // >>>>>>>.end.....start.>>>>>>>
+     assert(start.poly == end.poly && "We can only bridge from one polygon from the other if both connections depart from the one polygon!");
+     ConstPolygonRef poly = *end.poly;
+-    char dir = getPolygonDirection(end, start); // we get the direction of the polygon in between the bridge connections, while we add the segment of the polygon not in between the segments
++    int16_t dir = getPolygonDirection(end, start); // we get the direction of the polygon in between the bridge connections, while we add the segment of the polygon not in between the segments
+ 
+     result.add(start.p());
+     bool first_iter = true;
+@@ -102,7 +102,7 @@ void PolygonConnector::addPolygonSegment(const ClosestPolygonPoint& start, const
+     result.add(end.p());
+ }
+ 
+-char PolygonConnector::getPolygonDirection(const ClosestPolygonPoint& from, const ClosestPolygonPoint& to)
++int16_t PolygonConnector::getPolygonDirection(const ClosestPolygonPoint& from, const ClosestPolygonPoint& to)
+ {
+     assert(from.poly == to.poly && "We can only bridge from one polygon from the other if both connections depart from the one polygon!");
+     ConstPolygonRef poly = *from.poly;
+diff --git a/src/utils/PolygonConnector.h b/src/utils/PolygonConnector.h
+index 6d69b470..66d1dcd2 100644
+--- a/src/utils/PolygonConnector.h
++++ b/src/utils/PolygonConnector.h
+@@ -150,7 +150,7 @@ protected:
+      * It cannot be used as a general purpose function for any two ClosestPolygonPoint
+      * For large distances between \p from and \p to the output direction might be 'incorrect'.
+      */
+-    char getPolygonDirection(const ClosestPolygonPoint& from, const ClosestPolygonPoint& to);
++    int16_t getPolygonDirection(const ClosestPolygonPoint& from, const ClosestPolygonPoint& to);
+ 
+     /*!
+      * Get the bridge to cross between two polygons.
+diff --git a/src/utils/polygonUtils.cpp b/src/utils/polygonUtils.cpp
+index 0717f88a..6c29aa17 100644
+--- a/src/utils/polygonUtils.cpp
++++ b/src/utils/polygonUtils.cpp
+@@ -1145,7 +1145,7 @@ std::optional<ClosestPolygonPoint> PolygonUtils::getNextParallelIntersection(con
+             const Point segment_vector = next_vert - prev_vert;
+             const coord_t segment_length = vSize(segment_vector);
+             const coord_t projected_segment_length = std::abs(projected - prev_projected);
+-            const char sign = (projected > 0) ? 1 : -1;
++            const int16_t sign = (projected > 0) ? 1 : -1;
+             const coord_t projected_inter_segment_length = dist - sign * prev_projected; // add the prev_projected to dist if it is projected to the other side of the input line than where the intersection occurs.
+             const coord_t inter_segment_length = segment_length * projected_inter_segment_length / projected_segment_length;
+             const Point intersection = prev_vert + normal(next_vert - prev_vert, inter_segment_length);
+-- 
+2.24.1
+

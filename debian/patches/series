@@ -1,2 +1,3 @@
 2000-remove-rpath.patch
 2001-version-test.patch
+0001-Be-more-compliant-with-non-x86-architectures.patch
