@@ -603,11 +603,21 @@ void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
                 {
                     const Polygons outer = part.insets.back().offset(-1 * line_width / 2 - perimeter_gaps_extra_offset);
 
-                    Polygons inner = part.infill_area;
+                    // accumulate area of skin and infill that will be printed
+                    Polygons inner;
                     for (const SkinPart& skin_part : part.skin_parts)
                     {
                         inner.add(skin_part.outline);
                     }
+                    // for some reason the zig-zag and lines patterns behave differently and a narrow region that isn't filled with zig-zag pattern can be filled with
+                    // lines pattern so we only add the narrow region to the perimeter gaps when the pattern is zig-zag.
+                    if (((layer_nr == 0) ? mesh.settings.get<EFillMethod>("top_bottom_pattern_0") : mesh.settings.get<EFillMethod>("top_bottom_pattern")) == EFillMethod::ZIG_ZAG)
+                    {
+                        // remove skin areas that are narrower than skin_line_width as they won't get printed unless
+                        // we print them as a perimeter gap
+                        inner = inner.offset(-skin_line_width / 2).offset(skin_line_width / 2);
+                    }
+                    inner.add(part.infill_area);
                     inner = inner.unionPolygons();
                     part.perimeter_gaps.add(outer.difference(inner));
                 }
@@ -1051,6 +1061,14 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
         }
         break;
     }
+
+    // Also apply maximum_[deviation|resolution] to skirt/brim.
+    const coord_t line_segment_resolution = train.settings.get<coord_t>("meshfix_maximum_resolution");
+    const coord_t line_segment_deviation = train.settings.get<coord_t>("meshfix_maximum_deviation");
+    for (Polygons& polygons : storage.skirt_brim)
+    {
+        polygons.simplify(line_segment_resolution, line_segment_deviation);
+    }
 }
 
 
@@ -1074,6 +1092,11 @@ void FffPolygonGenerator::processFuzzyWalls(SliceMeshStorage& mesh)
             Polygons& skin = (mesh.settings.get<ESurfaceMode>("magic_mesh_surface_mode") == ESurfaceMode::SURFACE)? part.outline : part.insets[0];
             for (PolygonRef poly : skin)
             {
+                if (mesh.settings.get<bool>("magic_fuzzy_skin_outside_only") && poly.area() < 0)
+                {
+                    results.add(poly);
+                    continue;
+                }
                 // generate points in between p0 and p1
                 PolygonRef result = results.newPoly();
 

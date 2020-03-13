@@ -185,6 +185,11 @@ void CommandLine::sliceNext()
                                 slice.scene.extruders.emplace_back(slice.scene.extruders.size(), &slice.scene.settings);
                             }
                         }
+                        //If this was an extruder stack, make sure that the extruder_nr setting is correct.
+                        if (last_settings == &last_extruder->settings)
+                        {
+                            last_extruder->settings.add("extruder_nr", std::to_string(last_extruder->extruder_nr));
+                        }
                         break;
                     }
                     case 'e':
@@ -195,6 +200,7 @@ void CommandLine::sliceNext()
                             slice.scene.extruders.emplace_back(extruder_nr, &slice.scene.settings);
                         }
                         last_settings = &slice.scene.extruders[extruder_nr].settings;
+                        last_settings->add("extruder_nr", argument.substr(2));
                         last_extruder = &slice.scene.extruders[extruder_nr];
                         break;
                     }
@@ -350,7 +356,7 @@ std::unordered_set<std::string> CommandLine::defaultSearchDirectories()
 #else
         char delims[] = ";"; //Semicolon for Windows.
 #endif
-        char paths[32 * 1024]; //Maximum length of environment variable.
+        char paths[128 * 1024]; //Maximum length of environment variable.
         strcpy(paths, search_path_env); //Necessary because strtok actually modifies the original string, and we don't want to modify the environment variable itself.
         char* path = strtok(paths, delims);
         while (path != nullptr)
