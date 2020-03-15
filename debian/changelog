@@ -1,9 +1,10 @@
-cura-engine (1:4.5.0-2) UNRELEASED; urgency=medium
+cura-engine (1:4.5.0-2) unstable; urgency=medium
 
+  * Team upload.
   * Allow some precision deviation in tests on i386.
   * Ignore GCodeExportTest failures on mips64el hppa hurd-i386 ia64.
 
- -- Christoph Berg <myon@debian.org>  Sat, 14 Mar 2020 16:16:00 +0100
+ -- Christoph Berg <myon@debian.org>  Sun, 15 Mar 2020 12:13:32 +0100
 
 cura-engine (1:4.5.0-1) unstable; urgency=medium
 
