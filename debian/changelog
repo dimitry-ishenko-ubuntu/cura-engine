@@ -1,3 +1,9 @@
+cura-engine (1:4.5.0-3) UNRELEASED; urgency=medium
+
+  * Use secure copyright file specification URI.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Tue, 05 May 2020 22:08:32 +0000
+
 cura-engine (1:4.5.0-2) unstable; urgency=medium
 
   * Team upload.
