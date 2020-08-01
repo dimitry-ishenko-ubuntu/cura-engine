@@ -1,3 +1,14 @@
+cura-engine (1:4.5.0-3) UNRELEASED; urgency=medium
+
+  * Use secure copyright file specification URI.
+  * Wrap long lines in changelog entries: 1:2.5.0-3.
+  * Bump debhelper from old 10 to 12.
+  * Set debhelper-compat version in Build-Depends.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Tue, 05 May 2020 22:08:32 +0000
+
 cura-engine (1:4.5.0-2) unstable; urgency=medium
 
   * Team upload.
@@ -105,7 +116,8 @@ cura-engine (1:2.5.0-3) unstable; urgency=medium
     upstream PR link.
 
   [ Petter Reinholdtsen ]
-  * Restructured debian/patches/ to number based on source and planned trajectory.
+  * Restructured debian/patches/ to number based on source and planned
+    trajectory.
 
  -- Petter Reinholdtsen <pere@debian.org>  Tue, 17 Oct 2017 10:49:17 +0200
 
