@@ -1,11 +1,17 @@
-cura-engine (1:4.5.0-3) UNRELEASED; urgency=medium
+cura-engine (1:4.6.2-1) UNRELEASED; urgency=medium
 
+  * Team upload.
+
+  [ Debian Janitor ]
   * Use secure copyright file specification URI.
   * Wrap long lines in changelog entries: 1:2.5.0-3.
   * Bump debhelper from old 10 to 12.
   * Set debhelper-compat version in Build-Depends.
   * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
     Repository-Browse.
+
+  [ Christoph Berg ]
+  * New upstream version.
 
  -- Debian Janitor <janitor@jelmer.uk>  Tue, 05 May 2020 22:08:32 +0000
 
