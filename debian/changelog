@@ -12,6 +12,7 @@ cura-engine (1:4.6.2-1) UNRELEASED; urgency=medium
 
   [ Christoph Berg ]
   * New upstream version.
+  * Cherry-pick patch from upstream to fix mips64el build.
 
  -- Debian Janitor <janitor@jelmer.uk>  Tue, 05 May 2020 22:08:32 +0000
 
