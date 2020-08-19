@@ -1,4 +1,4 @@
-cura-engine (1:4.6.2-1) UNRELEASED; urgency=medium
+cura-engine (1:4.6.2-1) unstable; urgency=medium
 
   * Team upload.
 
@@ -14,7 +14,7 @@ cura-engine (1:4.6.2-1) UNRELEASED; urgency=medium
   * New upstream version.
   * Cherry-pick patch from upstream to fix mips64el build.
 
- -- Debian Janitor <janitor@jelmer.uk>  Tue, 05 May 2020 22:08:32 +0000
+ -- Christoph Berg <myon@debian.org>  Wed, 19 Aug 2020 11:53:16 +0200
 
 cura-engine (1:4.5.0-2) unstable; urgency=medium
 
