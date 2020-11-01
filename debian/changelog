@@ -1,7 +1,7 @@
 cura-engine (1:4.7.1-2) unstable; urgency=medium
 
   [ Gregor Riepl ]
-  * Added build fix for missing algorithm include. Fixes: #972808
+  * Added build fix for missing algorithm include. Closes: #972808
 
   [ Christoph Berg ]
   * Add myself to Uploaders.
