@@ -1,9 +1,12 @@
 cura-engine (1:4.7.1-2) unstable; urgency=medium
 
-  * Team upload.
+  [ Gregor Riepl ]
   * Added build fix for missing algorithm include. Fixes: #972808
 
- -- Gregor Riepl <onitake@gmail.com>  Sun, 25 Oct 2020 13:21:50 +0100
+  [ Christoph Berg ]
+  * Add myself to Uploaders.
+
+ -- Christoph Berg <myon@debian.org>  Sun, 01 Nov 2020 22:06:52 +0100
 
 cura-engine (1:4.7.1-1) unstable; urgency=medium
 

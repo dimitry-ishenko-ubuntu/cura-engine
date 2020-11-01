@@ -1,7 +1,8 @@
 Source: cura-engine
 Priority: optional
 Maintainer: Debian 3-D Printing Packages <3dprinter-general@lists.alioth.debian.org>
-Uploaders: Gregor Riepl <onitake@gmail.com>
+Uploaders: Gregor Riepl <onitake@gmail.com>,
+ Christoph Berg <myon@debian.org>,
 Build-Depends: debhelper-compat (= 12), cmake (>= 2.8.12),
  pkg-config (>= 0.29),
  libcppunit-dev,
