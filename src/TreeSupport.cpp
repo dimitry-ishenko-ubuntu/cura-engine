@@ -1,4 +1,4 @@
-//Copyright (c) 2019 Ultimaker B.V.
+//Copyright (c) 2021 Ultimaker B.V.
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
 #include "Application.h" //To get settings.
@@ -8,14 +8,17 @@
 #include "TreeSupport.h"
 #include "progress/Progress.h"
 #include "settings/EnumSettings.h"
-#include "settings/types/AngleRadians.h" //Creating the correct branch angles.
+#include "settings/types/Angle.h" //Creating the correct branch angles.
 #include "settings/types/Ratio.h"
+#include "utils/algorithm.h"
 #include "utils/IntPoint.h" //To normalize vectors.
 #include "utils/logoutput.h"
 #include "utils/math.h" //For round_up_divide and PI.
 #include "utils/MinimumSpanningTree.h" //For connecting the correct nodes together to form an efficient tree.
 #include "utils/polygon.h" //For splitting polygons into parts.
 #include "utils/polygonUtils.h" //For moveInside.
+
+#include <mutex>
 
 #define SQRT_2 1.4142135623730950488 //Square root of 2.
 #define CIRCLE_RESOLUTION 10 //The number of vertices in each circle.
@@ -31,15 +34,7 @@ namespace cura
 TreeSupport::TreeSupport(const SliceDataStorage& storage)
 {
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-
-    const coord_t xy_distance = mesh_group_settings.get<coord_t>("support_xy_distance");
-    const coord_t layer_height = mesh_group_settings.get<coord_t>("layer_height");
-    const AngleRadians angle = mesh_group_settings.get<AngleRadians>("support_tree_angle");
-    const coord_t maximum_move_distance
-        = (angle < TAU / 4) ? (coord_t)(tan(angle) * layer_height) : std::numeric_limits<coord_t>::max();
-    const coord_t radius_sample_resolution = mesh_group_settings.get<coord_t>("support_tree_collision_resolution");
-
-    volumes_ = ModelVolumes(storage, xy_distance, maximum_move_distance, radius_sample_resolution);
+    volumes_ = TreeModelVolumes(storage, mesh_group_settings);
 }
 
 void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
@@ -103,14 +98,15 @@ void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::
     const coord_t z_distance_bottom = mesh_group_settings.get<coord_t>("support_bottom_distance");
     const coord_t layer_height = mesh_group_settings.get<coord_t>("layer_height");
     const size_t z_distance_bottom_layers = round_up_divide(z_distance_bottom, layer_height) > 0 ? round_up_divide(z_distance_bottom, layer_height) : 1;
-    const size_t tip_layers = branch_radius / layer_height; //The number of layers to be shrinking the circle to create a tip. This produces a 45 degree angle.
     const double diameter_angle_scale_factor = sin(mesh_group_settings.get<AngleRadians>("support_tree_branch_diameter_angle")) * layer_height / branch_radius; //Scale factor per layer to produce the desired angle.
     const coord_t line_width = mesh_group_settings.get<coord_t>("support_line_width");
+    const coord_t minimum_tip_radius = line_width / 2 * 1.5; //End up slightly wider than 1 line width in the tip.
+    const size_t tip_layers = (branch_radius - minimum_tip_radius) / layer_height; //The number of layers to be shrinking the circle to create a tip. This produces a 45 degree angle.
     const coord_t resolution = mesh_group_settings.get<coord_t>("support_tree_collision_resolution");
-    size_t completed = 0; //To track progress in a multi-threaded environment.
-#pragma omp parallel for shared(storage, contact_nodes)
-    // Use a signed type for the loop counter so MSVC compiles (because it uses OpenMP 2.0, an old version).
-    for (int layer_nr = 0; layer_nr < static_cast<int>(contact_nodes.size()); layer_nr++)
+
+    std::atomic<size_t> completed = 0; //To track progress in a multi-threaded environment.
+    std::mutex critical_sections;
+    cura::parallel_for<size_t>(0, contact_nodes.size(), 1, [&](const size_t layer_nr)
     {
         Polygons support_layer;
         Polygons& roof_layer = storage.support.supportLayers[layer_nr].support_roof;
@@ -121,7 +117,10 @@ void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::
             const Node& node = *p_node;
 
             Polygon circle;
-            const double scale = static_cast<double>(node.distance_to_top + 1) / tip_layers;
+            //Scale linearly between branch radius and 1 line width.
+            //At the tip we want to end up at 1 line width diameter so that the tip still prints if you have 1 support wall.
+            const double ratio_to_tip = static_cast<double>(node.distance_to_top) / tip_layers;
+            const double scale = (minimum_tip_radius + ratio_to_tip * (branch_radius - minimum_tip_radius)) / branch_radius;
             for (Point corner : branch_circle)
             {
                 if (node.distance_to_top < tip_layers) //We're in the tip.
@@ -147,9 +146,6 @@ void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::
         }
         support_layer = support_layer.unionPolygons();
         roof_layer = roof_layer.unionPolygons();
-        const size_t z_collision_layer = static_cast<size_t>(std::max(0, static_cast<int>(layer_nr) - static_cast<int>(z_distance_bottom_layers) + 1)); //Layer to test against to create a Z-distance.
-        support_layer = support_layer.difference(volumes_.getCollision(0, z_collision_layer)); //Subtract the model itself (sample 0 is with 0 diameter but proper X/Y offset).
-        roof_layer = roof_layer.difference(volumes_.getCollision(branch_radius, z_collision_layer));
         support_layer = support_layer.difference(roof_layer);
         //We smooth this support as much as possible without altering single circles. So we remove any line less than the side length of those circles.
         const double diameter_angle_scale_factor_this_layer = static_cast<double>(storage.support.supportLayers.size() - layer_nr - tip_layers) * diameter_angle_scale_factor; //Maximum scale factor.
@@ -176,7 +172,7 @@ void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::
                 constexpr bool no_prime_tower = false;
                 floor_layer.add(support_layer.intersection(storage.getLayerOutlines(sample_layer, no_support, no_prime_tower)));
             }
-            floor_layer.unionPolygons();
+            floor_layer = floor_layer.unionPolygons();
             support_layer = support_layer.difference(floor_layer.offset(10)); //Subtract the support floor from the normal support.
         }
 
@@ -186,23 +182,26 @@ void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::
             storage.support.supportLayers[layer_nr].support_infill_parts.emplace_back(part, line_width, wall_count);
         }
 
-#pragma omp critical (support_max_layer_nr)
         {
+            std::lock_guard<std::mutex> critical_section_support_max_layer_nr(critical_sections);
+
             if (!storage.support.supportLayers[layer_nr].support_infill_parts.empty() || !storage.support.supportLayers[layer_nr].support_roof.empty())
             {
                 storage.support.layer_nr_max_filled_layer = std::max(storage.support.layer_nr_max_filled_layer, static_cast<int>(layer_nr));
             }
         }
-#pragma omp atomic
-        completed++;
-#pragma omp critical (progress)
+
+        ++completed;
+
         {
+            std::lock_guard<std::mutex> critical_section_progress(critical_sections);
+
             const double progress_contact_nodes = contact_nodes.size() * PROGRESS_WEIGHT_DROPDOWN;
             const double progress_current = completed * PROGRESS_WEIGHT_AREAS;
             const double progress_total = completed * PROGRESS_WEIGHT_AREAS;
             Progress::messageProgress(Progress::Stage::SUPPORT, progress_contact_nodes + progress_current, progress_contact_nodes + progress_total);
         }
-    }
+    });
 }
 
 void TreeSupport::dropNodes(std::vector<std::vector<Node*>>& contact_nodes)
@@ -481,17 +480,17 @@ void TreeSupport::generateContactPoints(const SliceMeshStorage& mesh, std::vecto
     constexpr double rotate_angle = 22.0 / 180.0 * M_PI;
     const Point bounding_box_size = bounding_box.max - bounding_box.min;
 
-    // Store centre of AABB so we can relocate the generated points
-    const auto centre = bounding_box.getMiddle();
-    const auto sin_angle = std::sin(rotate_angle);
-    const auto cos_angle = std::cos(rotate_angle);
+    // Store center of AABB so we can relocate the generated points
+    const Point center = bounding_box.getMiddle();
+    const double sin_angle = std::sin(rotate_angle);
+    const double cos_angle = std::cos(rotate_angle);
     // Calculate the dimensions of the AABB of the mesh AABB after being rotated
     // by `rotate_angle`. Halve the dimensions since we'll be using it as a +-
     // offset from the centre of `bounding_box`.
     // This formulation will only work with rotation angles <90 degrees. If the
     // rotation angle becomes a user-configurable value then this will need to
     // be changed
-    const auto rotated_dims = Point(
+    const Point rotated_dims = Point(
         bounding_box_size.X * cos_angle + bounding_box_size.Y * sin_angle,
         bounding_box_size.X * sin_angle + bounding_box_size.Y * cos_angle) / 2;
 
@@ -500,9 +499,9 @@ void TreeSupport::generateContactPoints(const SliceMeshStorage& mesh, std::vecto
     {
         for (auto y = -rotated_dims.Y; y <= rotated_dims.Y; y += point_spread)
         {
-            // Construct a point as an offset from the mesh AABB centre, rotated
-            // about the mesh AABB centre
-            const auto pt = rotate(Point(x, y), rotate_angle) + centre;
+            // Construct a point as an offset from the mesh AABB center, rotated
+            // about the mesh AABB center
+            const Point pt = rotate(Point(x, y), rotate_angle) + center;
             // Only add to grid points if we have a chance to collide with the
             // mesh
             if (bounding_box.contains(pt))
@@ -545,7 +544,7 @@ void TreeSupport::generateContactPoints(const SliceMeshStorage& mesh, std::vecto
             {
                 if (overhang_bounds.contains(candidate))
                 {
-                    constexpr coord_t distance_inside = 0; //Move point towards the border of the polygon if it is closer than half the overhang distance: Catch points that fall between overhang areas on constant surfaces.
+                    constexpr coord_t distance_inside = 1; //Move point towards the border of the polygon if it is closer than half the overhang distance: Catch points that fall between overhang areas on constant surfaces.
                     PolygonUtils::moveInside(overhang_part, candidate, distance_inside, half_overhang_distance * half_overhang_distance);
                     constexpr bool border_is_inside = true;
                     if (overhang_part.inside(candidate, border_is_inside) && !volumes_.getCollision(0, layer_nr).inside(candidate, border_is_inside))
@@ -600,140 +599,6 @@ void TreeSupport::insertDroppedNode(std::vector<Node*>& nodes_layer, Node* p_nod
     Node* conflicting_node = *conflicting_node_it;
     conflicting_node->distance_to_top = std::max(conflicting_node->distance_to_top, p_node->distance_to_top);
     conflicting_node->support_roof_layers_below = std::max(conflicting_node->support_roof_layers_below, p_node->support_roof_layers_below);
-}
-
-ModelVolumes::ModelVolumes(const SliceDataStorage& storage, coord_t xy_distance, coord_t max_move,
-                           coord_t radius_sample_resolution) :
-    machine_border_{calculateMachineBorderCollision(storage.getMachineBorder())},
-    xy_distance_{xy_distance},
-    max_move_{max_move},
-    radius_sample_resolution_{radius_sample_resolution}
-{
-    for (std::size_t layer_idx  = 0; layer_idx < storage.support.supportLayers.size(); ++layer_idx)
-    {
-        constexpr bool include_support = false;
-        constexpr bool include_prime_tower = true;
-        layer_outlines_.push_back(storage.getLayerOutlines(layer_idx, include_support, include_prime_tower));
-    }
-}
-
-const Polygons& ModelVolumes::getCollision(coord_t radius, LayerIndex layer_idx) const
-{
-    radius = ceilRadius(radius);
-    RadiusLayerPair key{radius, layer_idx};
-    const auto it = collision_cache_.find(key);
-    if (it != collision_cache_.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return calculateCollision(key);
-    }
-}
-
-const Polygons& ModelVolumes::getAvoidance(coord_t radius, LayerIndex layer_idx) const
-{
-    radius = ceilRadius(radius);
-    RadiusLayerPair key{radius, layer_idx};
-    const auto it = avoidance_cache_.find(key);
-    if (it != avoidance_cache_.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return calculateAvoidance(key);
-    }
-}
-
-const Polygons& ModelVolumes::getInternalModel(coord_t radius, LayerIndex layer_idx) const
-{
-    radius = ceilRadius(radius);
-    RadiusLayerPair key{radius, layer_idx};
-    const auto it = internal_model_cache_.find(key);
-    if (it != internal_model_cache_.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return calculateInternalModel(key);
-    }
-}
-
-coord_t ModelVolumes::ceilRadius(coord_t radius) const
-{
-    const auto remainder = radius % radius_sample_resolution_;
-    const auto delta = remainder != 0 ? radius_sample_resolution_- remainder : 0;
-    return radius + delta;
-}
-
-const Polygons& ModelVolumes::calculateCollision(const RadiusLayerPair& key) const
-{
-    const auto& radius = key.first;
-    const auto& layer_idx = key.second;
-
-    auto collision_areas = machine_border_;
-    if (layer_idx < static_cast<int>(layer_outlines_.size()))
-    {
-        collision_areas = collision_areas.unionPolygons(layer_outlines_[layer_idx]);
-    }
-    collision_areas = collision_areas.offset(xy_distance_ + radius, ClipperLib::JoinType::jtRound);
-    const auto ret = collision_cache_.insert({key, std::move(collision_areas)});
-    assert(ret.second);
-    return ret.first->second;
-}
-
-const Polygons& ModelVolumes::calculateAvoidance(const RadiusLayerPair& key) const
-{
-    const auto& radius = key.first;
-    const auto& layer_idx = key.second;
-
-    if (layer_idx == 0)
-    {
-        avoidance_cache_[key] = getCollision(radius, 0);
-        return avoidance_cache_[key];
-    }
-
-    // Avoidance for a given layer depends on all layers beneath it so could have very deep recursion depths if
-    // called at high layer heights. We can limit the reqursion depth to N by checking if the if the layer N
-    // below the current one exists and if not, forcing the calculation of that layer. This may cause another recursion
-    // if the layer at 2N below the current one but we won't exceed our limit unless there are N*N uncalculated layers
-    // below our current one.
-    constexpr auto max_recursion_depth = 100;
-    // Check if we would exceed the recursion limit by trying to process this layer
-    if (layer_idx >= max_recursion_depth
-        && avoidance_cache_.find({radius, layer_idx - max_recursion_depth}) == avoidance_cache_.end())
-    {
-        // Force the calculation of the layer `max_recursion_depth` below our current one, ignoring the result.
-        getAvoidance(radius, layer_idx - max_recursion_depth);
-    }
-    auto avoidance_areas = getAvoidance(radius, layer_idx - 1).offset(-max_move_).smooth(5);
-    avoidance_areas = avoidance_areas.unionPolygons(getCollision(radius, layer_idx));
-    const auto ret = avoidance_cache_.insert({key, std::move(avoidance_areas)});
-    assert(ret.second);
-    return ret.first->second;
-}
-
-const Polygons& ModelVolumes::calculateInternalModel(const RadiusLayerPair& key) const
-{
-    const auto& radius = key.first;
-    const auto& layer_idx = key.second;
-
-    const auto& internal_areas = getAvoidance(radius, layer_idx).difference(getCollision(radius, layer_idx));
-    const auto ret = internal_model_cache_.insert({key, internal_areas});
-    assert(ret.second);
-    return ret.first->second;
-}
-
-Polygons ModelVolumes::calculateMachineBorderCollision(Polygon machine_border)
-{
-    Polygons machine_volume_border;
-    machine_volume_border.add(machine_border.offset(1000000)); //Put a border of 1m around the print volume so that we don't collide.
-    machine_border.reverse(); //Makes the polygon negative so that we subtract the actual volume from the collision area.
-    machine_volume_border.add(machine_border);
-    return machine_volume_border;
 }
 
 } //namespace cura

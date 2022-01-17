@@ -1,12 +1,13 @@
-//Copyright (c) 2018 Ultimaker B.V.
+//Copyright (c) 2021 Ultimaker B.V.
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef INFILL_H
 #define INFILL_H
 
+#include "infill/LightningGenerator.h"
 #include "infill/ZigzagConnectorProcessor.h"
 #include "settings/EnumSettings.h" //For infill types.
-#include "settings/types/AngleDegrees.h"
+#include "settings/types/Angle.h"
 #include "utils/IntPoint.h"
 
 namespace cura
@@ -34,6 +35,8 @@ class Infill
     AngleDegrees fill_angle; //!< for linear infill types: the angle of the infill lines (or the angle of the grid)
     coord_t z; //!< height of the layer for which we generate infill
     coord_t shift; //!< shift of the scanlines in the direction perpendicular to the fill_angle
+    coord_t max_resolution; //!< Min feature size of the output
+    coord_t max_deviation; //!< Max deviation fro the original poly when enforcing max_resolution
     size_t wall_line_count; //!< Number of walls to generate at the boundary of the infill region, spaced \ref infill_line_width apart
     const Point infill_origin; //!< origin of the infill pattern
     Polygons* perimeter_gaps; //!< (optional output) The areas in between consecutive insets when Concentric infill is used.
@@ -66,6 +69,8 @@ public:
         , AngleDegrees fill_angle
         , coord_t z
         , coord_t shift
+        , coord_t max_resolution
+        , coord_t max_deviation
         , size_t wall_line_count = 0
         , const Point& infill_origin = Point()
         , Polygons* perimeter_gaps = nullptr
@@ -74,30 +79,7 @@ public:
         , bool skip_some_zags = false
         , size_t zag_skip_count = 0
         , coord_t pocket_size = 0
-    )
-    : pattern(pattern)
-    , zig_zaggify(zig_zaggify)
-    , connect_polygons(connect_polygons)
-    , in_outline(in_outline)
-    , outline_offset(outline_offset)
-    , infill_line_width(infill_line_width)
-    , line_distance(line_distance)
-    , infill_overlap(infill_overlap)
-    , infill_multiplier(infill_multiplier)
-    , fill_angle(fill_angle)
-    , z(z)
-    , shift(shift)
-    , wall_line_count(wall_line_count)
-    , infill_origin(infill_origin)
-    , perimeter_gaps(perimeter_gaps)
-    , connected_zigzags(connected_zigzags)
-    , use_endpieces(use_endpieces)
-    , skip_some_zags(skip_some_zags)
-    , zag_skip_count(zag_skip_count)
-    , pocket_size(pocket_size)
-    , mirror_offset(zig_zaggify)
-    {
-    }
+    );
 
     /*!
      * Generate the infill.
@@ -107,13 +89,21 @@ public:
      * \param mesh The mesh for which to generate infill (should only be used for non-helper objects)
      * \param[in] cross_fill_provider The cross fractal subdivision decision functor
      */
-    void generate(Polygons& result_polygons, Polygons& result_lines, const SierpinskiFillProvider* cross_fill_provider = nullptr, const SliceMeshStorage* mesh = nullptr);
+    void generate(  Polygons& result_polygons,
+                    Polygons& result_lines,
+                    const SierpinskiFillProvider* cross_fill_provider = nullptr,
+                    const LightningLayer* lightning_layer = nullptr,
+                    const SliceMeshStorage* mesh = nullptr);
 
 private:
     /*!
      * Generate the infill pattern without the infill_multiplier functionality
      */
-    void _generate(Polygons& result_polygons, Polygons& result_lines, const SierpinskiFillProvider* cross_fill_pattern = nullptr, const SliceMeshStorage* mesh = nullptr);
+    void _generate( Polygons& result_polygons,
+                    Polygons& result_lines,
+                    const SierpinskiFillProvider* cross_fill_pattern = nullptr,
+                    const LightningLayer* lightning_layer = nullptr,
+                    const SliceMeshStorage* mesh = nullptr);
 
     /*!
      * Multiply the infill lines, so that any single line becomes [infill_multiplier] lines next to each other.
@@ -228,6 +218,13 @@ private:
     void generateGyroidInfill(Polygons& result);
     
     /*!
+     * Generate lightning fill aka minfill aka 'Ribbed Support Vault Infill', see Tricard,Claux,Lefebvre/'Ribbed Support Vaults for 3D Printing of Hollowed Objects'
+     * see https://hal.archives-ouvertes.fr/hal-02155929/document
+     * \param result (output) The resulting polygons
+     */
+    void generateLightningInfill(const LightningLayer* lightning_layer, Polygons& result_lines);
+
+    /*!
      * Generate sparse concentric infill
      * 
      * Also adds \ref Infill::perimeter_gaps between \ref Infill::in_outline and the first wall
@@ -316,14 +313,13 @@ private:
      * \param cut_list A mapping of each scanline to all y-coordinates (in the space transformed by rotation_matrix) where the polygons are crossing the scanline
      * \param total_shift total shift of the scanlines in the direction perpendicular to the fill_angle.
      */
-    void addLineInfill(Polygons& result, const PointMatrix& rotation_matrix, const int scanline_min_idx, const int line_distance, const AABB boundary, std::vector<std::vector<coord_t>>& cut_list, coord_t total_shift);
-
-    /*!
-     * Crop line segments by the infill polygon using Clipper
-     * \param[out] result (output) The resulting lines
-     * \param input The line segments to be cropped
-     */
-    void addLineSegmentsInfill(Polygons& result, Polygons& input);
+    void addLineInfill( Polygons& result,
+                        const PointMatrix& rotation_matrix,
+                        const int scanline_min_idx,
+                        const int line_distance,
+                        const AABB boundary,
+                        std::vector<std::vector<coord_t>>& cut_list,
+                        coord_t total_shift);
 
     /*!
      * generate lines within the area of \p in_outline, at regular intervals of \p line_distance
@@ -354,7 +350,13 @@ private:
      * \param connected_zigzags Whether to connect the endpiece zigzag segments on both sides to the same infill line
      * \param extra_shift extra shift of the scanlines in the direction perpendicular to the fill_angle
      */
-    void generateLinearBasedInfill(const int outline_offset, Polygons& result, const int line_distance, const PointMatrix& rotation_matrix, ZigzagConnectorProcessor& zigzag_connector_processor, const bool connected_zigzags, coord_t extra_shift);
+    void generateLinearBasedInfill( const int outline_offset,
+                                    Polygons& result,
+                                    const int line_distance,
+                                    const PointMatrix& rotation_matrix,
+                                    ZigzagConnectorProcessor& zigzag_connector_processor,
+                                    const bool connected_zigzags,
+                                    coord_t extra_shift);
 
     /*!
      * 
@@ -427,4 +429,4 @@ private:
 
 }//namespace cura
 
-#endif//INFILL_H
+#endif // INFILL_H
