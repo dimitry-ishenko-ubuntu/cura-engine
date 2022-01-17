@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# This test needs files from the corresponding cura release:
+# cp $cura_sourcedir/resources/definitions/fdmprinter.def.json debian/tests
+# cp $cura_sourcedir/resources/definitions/fdmextruder.def.json debian/tests
+
 set -e
 
 at_exit() {
