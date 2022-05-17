@@ -1,3 +1,9 @@
+cura-engine (1:5.0.0-1) UNRELEASED; urgency=medium
+
+  * New upstream version 5.0.0
+
+ -- Sebastian Kuzminsky <seb@highlab.com>  Tue, 17 May 2022 12:26:52 -0600
+
 cura-engine (1:4.13.0-1) unstable; urgency=medium
 
   [ Debian Janitor ]
