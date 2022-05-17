@@ -1,3 +1,8 @@
+From: Debian 3-D Printing Packages
+ <3dprinter-general@lists.alioth.debian.org>
+Date: Tue, 17 May 2022 12:27:42 -0600
+Subject: relax-test
+
 Allow some precision deviation on i386
 
 [ RUN      ] ArcusCommunicationPrivateTest.ReadMeshGroupMessage
@@ -31,10 +36,15 @@ Expected equality of these values:
  1 FAILED TEST
 
 https://github.com/Ultimaker/CuraEngine/issues/1192
+---
+ tests/arcus/ArcusCommunicationPrivateTest.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/tests/arcus/ArcusCommunicationPrivateTest.cpp b/tests/arcus/ArcusCommunicationPrivateTest.cpp
+index 8c958ed..5010909 100644
 --- a/tests/arcus/ArcusCommunicationPrivateTest.cpp
 +++ b/tests/arcus/ArcusCommunicationPrivateTest.cpp
-@@ -247,7 +247,11 @@ TEST_F(ArcusCommunicationPrivateTest, Re
+@@ -247,7 +247,11 @@ TEST_F(ArcusCommunicationPrivateTest, ReadMeshGroupMessage)
      // - Then, just compare:
      for (int i = 0; i < 3; ++i)
      {

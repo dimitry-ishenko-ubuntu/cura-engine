@@ -1,0 +1,25 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Thu, 19 May 2022 12:35:39 -0600
+Subject: fix USE_SYSTEM_LIBS for protobuf
+
+---
+ CMakeLists.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1788074..2ee6c68 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -254,7 +254,11 @@ if(NOT APPLE AND ENABLE_OPENMP)
+ endif()
+ 
+ if(ENABLE_ARCUS)
+-    target_link_libraries(_CuraEngine PRIVATE Arcus protobuf::protobuf)
++    if (USE_SYSTEM_LIBS)
++        target_link_libraries(_CuraEngine PRIVATE Arcus ${PROTOBUF_LIBRARY})
++    else()
++        target_link_libraries(_CuraEngine PRIVATE Arcus protobuf::protobuf)
++    endif()
+ endif()
+ 
+ find_package(clipper 6.4.2 QUIET)

@@ -1,0 +1,24 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Tue, 17 May 2022 13:30:51 -0600
+Subject: reduce protobuf build dependency version to 3.12.4
+
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a2be956..720d4a0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,9 +23,9 @@ if (ENABLE_ARCUS)
+     message(STATUS "Building with Arcus")
+ 
+     find_package(Arcus REQUIRED 5.0.0)
+-    find_package(protobuf 3.15.0 QUIET)
++    find_package(protobuf 3.12.4 QUIET)
+     if (NOT TARGET protobuf::protobuf)
+-        find_package(Protobuf 3.15.0 REQUIRED)
++        find_package(Protobuf 3.12.4 REQUIRED)
+     else ()
+         add_library(Protobuf::protobuf ALIAS protobuf::protobuf)
+     endif ()

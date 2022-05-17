@@ -1,0 +1,21 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Wed, 18 May 2022 16:33:14 -0600
+Subject: don't be picky about boost version
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 720d4a0..1788074 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -279,7 +279,7 @@ endif()
+ 
+ find_package(stb REQUIRED)
+ 
+-find_package(Boost REQUIRED 1.75.0)
++find_package(Boost REQUIRED)
+ if (NOT TARGET Boost::boost)  # Workaround for different namespace in non Conan find_packages
+     add_library(boost::boost ALIAS Boost::boost)
+ endif ()

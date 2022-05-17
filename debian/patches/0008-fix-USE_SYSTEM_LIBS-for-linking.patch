@@ -1,0 +1,25 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Thu, 19 May 2022 12:42:03 -0600
+Subject: fix USE_SYSTEM_LIBS for linking
+
+---
+ CMakeLists.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 233d8e3..a55ab49 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -298,7 +298,11 @@ if (NOT TARGET Boost::boost)  # Workaround for different namespace in non Conan
+     add_library(boost::boost ALIAS Boost::boost)
+ endif ()
+ 
+-target_link_libraries(_CuraEngine PRIVATE clipper::clipper rapidjson::rapidjson stb::stb boost::boost)
++if (USE_SYSTEM_LIBS)
++    target_link_libraries(_CuraEngine PRIVATE ${Polyclipping_LIBRARIES})
++else()
++    target_link_libraries(_CuraEngine PRIVATE clipper::clipper rapidjson::rapidjson stb::stb boost::boost)
++endif()
+ 
+ if (WIN32)
+     message(STATUS "Using windres")

@@ -1,0 +1,53 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Wed, 18 May 2022 16:22:06 -0600
+Subject: stb: don't build from source, use debian's packaged build-dependency
+
+---
+ CMakeLists.txt      |  1 +
+ cmake/Findstb.cmake | 10 ++--------
+ 2 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a55ab49..5ad5eb5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -300,6 +300,7 @@ endif ()
+ 
+ if (USE_SYSTEM_LIBS)
+     target_link_libraries(_CuraEngine PRIVATE ${Polyclipping_LIBRARIES})
++    target_include_directories(_CuraEngine PRIVATE ${Stb_INCLUDE_DIRS})
+ else()
+     target_link_libraries(_CuraEngine PRIVATE clipper::clipper rapidjson::rapidjson stb::stb boost::boost)
+ endif()
+diff --git a/cmake/Findstb.cmake b/cmake/Findstb.cmake
+index e9f11f3..91cdec0 100644
+--- a/cmake/Findstb.cmake
++++ b/cmake/Findstb.cmake
+@@ -11,7 +11,7 @@
+ 
+ #First try to find a PackageConfig for this library.
+ find_package(PkgConfig QUIET)
+-pkg_check_modules(PC_Stb QUIET Stb)
++pkg_check_modules(Stb QUIET stb)
+ 
+ find_path(Stb_INCLUDE_DIRS stb/stb_image_resize.h #Search for something that is a little less prone to false positives than just stb.h.
+     HINTS ${PC_Stb_INCLUDEDIR} ${PC_Stb_INCLUDE_DIRS}
+@@ -24,7 +24,7 @@ set(_stb_find_required ${Stb_FIND_REQUIRED}) #Temporarily set to optional so tha
+ set(_stb_find_quietly ${Stb_FIND_QUIETLY})
+ set(Stb_FIND_REQUIRED FALSE)
+ set(Stb_FIND_QUIETLY TRUE)
+-find_package_handle_standard_args(Stb DEFAULT_MSG Stb_INCLUDE_DIRS)
++find_package_handle_standard_args(stb DEFAULT_MSG Stb_INCLUDE_DIRS)
+ set(Stb_FIND_REQUIRED ${_stb_find_required})
+ set(Stb_FIND_QUIETLY ${_stb_find_quietly})
+ 
+@@ -67,9 +67,3 @@ else()
+ endif()
+ 
+ mark_as_advanced(Stb_INCLUDE_DIRS)
+-add_library(stb::stb INTERFACE)
+-target_include_directories(stb::stb
+-        PUBLIC
+-        $<BUILD_INTERFACE:${Stb_INCLUDE_DIRS}>
+-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+-        )

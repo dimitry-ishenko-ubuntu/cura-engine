@@ -1,0 +1,123 @@
+From: Sebastian Kuzminsky <sebastiankuzminsky@desktopmetal.com>
+Date: Thu, 19 May 2022 12:37:51 -0600
+Subject: fix USE_SYSTEM_LIBRARIES for clipper/polyclipping
+
+---
+ CMakeLists.txt               | 22 +++++++++------
+ cmake/FindPolyclipping.cmake | 67 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 8 deletions(-)
+ create mode 100644 cmake/FindPolyclipping.cmake
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2ee6c68..60bb46f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,6 +12,8 @@ option(USE_SYSTEM_LIBS "Use the system libraries if available" OFF)
+ option(ENABLE_MORE_COMPILER_OPTIMIZATION_FLAGS "Enable more optimization flags" ON)
+ option(EXTENSIVE_WARNINGS "Compile with all warnings" OFF)
+ 
++list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
++
+ if(NOT APPLE)
+     option(ENABLE_OPENMP "Use OpenMP for parallel code" ON)
+ endif()
+@@ -261,14 +263,18 @@ if(ENABLE_ARCUS)
+     endif()
+ endif()
+ 
+-find_package(clipper 6.4.2 QUIET)
+-if (NOT TARGET clipper::clipper)
+-    add_library(clipper::clipper STATIC libs/clipper/clipper.cpp)
+-    target_include_directories(clipper::clipper
+-            PUBLIC
+-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/libs/clipper/include>
+-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+-            )
++if(USE_SYSTEM_LIBS)
++    find_package(Polyclipping REQUIRED)
++else()
++    find_package(clipper 6.4.2 QUIET)
++    if (NOT TARGET clipper::clipper)
++        add_library(clipper::clipper STATIC libs/clipper/clipper.cpp)
++        target_include_directories(clipper::clipper
++                PUBLIC
++                $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/libs/clipper/include>
++                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
++                )
++    endif ()
+ endif ()
+ 
+ find_package(rapidjson 1.1.0 QUIET)
+diff --git a/cmake/FindPolyclipping.cmake b/cmake/FindPolyclipping.cmake
+new file mode 100644
+index 0000000..7c88ab6
+--- /dev/null
++++ b/cmake/FindPolyclipping.cmake
+@@ -0,0 +1,67 @@
++#
++# - Try to find the polyclipping library
++# this will define
++#
++#  Polyclipping_FOUND - polyclipping was found
++#  Polyclipping_INCLUDE_DIRS - the polyclipping include directory
++#  Polyclipping_LIBRARIES - The libraries needed to use polyclipping
++#  Polyclipping_VERSION - The polyclipping library version
++
++#=============================================================================
++# Copyright (c) 2017 Christophe Giboudeaux <christophe@krop.fr>
++#
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++#
++# 1. Redistributions of source code must retain the copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the copyright
++#    notice, this list of conditions and the following disclaimer in the
++#    documentation and/or other materials provided with the distribution.
++# 3. The name of the author may not be used to endorse or promote products
++#    derived from this software without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++#=============================================================================
++
++
++find_package(PkgConfig QUIET)
++pkg_check_modules(PC_Polyclipping QUIET polyclipping)
++
++find_path(Polyclipping_INCLUDE_DIRS
++  NAMES clipper.hpp
++  HINTS ${PC_Polyclipping_INCLUDE_DIRS}
++)
++
++find_library(Polyclipping_LIBRARIES
++  NAMES polyclipping
++  HINTS ${PC_Polyclipping_LIBRARY_DIRS}
++)
++
++if(EXISTS ${Polyclipping_INCLUDE_DIRS}/clipper.hpp)
++  file(READ ${Polyclipping_INCLUDE_DIRS}/clipper.hpp CLIPPER_H_CONTENT)
++  string(REGEX MATCH "#define CLIPPER_VERSION[ ]+\"[0-9]+.[0-9]+.[0-9]+\"" CLIPPER_H_VERSION_MATCH ${CLIPPER_H_CONTENT})
++  string(REGEX REPLACE "^.*CLIPPER_VERSION[ ]+\"([0-9]+.[0-9]+.[0-9]+).*$" "\\1" Polyclipping_VERSION "${CLIPPER_H_VERSION_MATCH}")
++endif()
++
++include(FindPackageHandleStandardArgs)
++
++find_package_handle_standard_args(Polyclipping
++    FOUND_VAR Polyclipping_FOUND
++    REQUIRED_VARS Polyclipping_LIBRARIES Polyclipping_INCLUDE_DIRS
++    VERSION_VAR Polyclipping_VERSION
++)
++
++mark_as_advanced(Polyclipping_LIBRARIES Polyclipping_INCLUDE_DIRS Polyclipping_VERSION)
++

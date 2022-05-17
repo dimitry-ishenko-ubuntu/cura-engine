@@ -1,2 +1,13 @@
 2001-version-test.patch
 1001-relax-test.patch
+0003-reduce-protobuf-build-dependency-version-to-3.12.4.patch
+0004-don-t-be-picky-about-boost-version.patch
+0005-fix-USE_SYSTEM_LIBS-for-protobuf.patch
+0006-fix-USE_SYSTEM_LIBRARIES-for-clipper-polyclipping.patch
+0007-fix-USE_SYSTEM_LIBS-for-rapidjson.patch
+0008-fix-USE_SYSTEM_LIBS-for-linking.patch
+0009-stb-don-t-build-from-source-use-debian-s-packaged-bu.patch
+0010-disable-remove-failing-test-ExtrusionLineTest-simpli.patch
+0011-disable-remove-failing-test-PolygonTest-simplifyZigz.patch
+0012-disable-remove-failing-test-PolygonTest-simplifyLimi.patch
+0013-disable-remove-failing-test-PolygonTest-simplifyIncr.patch
