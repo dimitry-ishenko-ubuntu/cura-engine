@@ -14,10 +14,6 @@ Files: libs/rapidjson/*
 Copyright: 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 License: MIT
 
-Files: libs/rapidjson/msinttypes/*
-Copyright: 2006-2013 Alexander Chemeris
-License: BSD-3-clause
-
 Files: debian/*
 Copyright:
  2014 Bas Wijnen <wijnen@debian.org>
