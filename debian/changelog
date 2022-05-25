@@ -1,8 +1,13 @@
 cura-engine (1:5.0.0-1) UNRELEASED; urgency=medium
 
-  * New upstream version 5.0.0
+  [ Sebastian Kuzminsky ]
+  * New upstream version 5.0.0.
+  * Remove copyright info for removed files.
+  * Bump libarcus build dependency version.
+  * Build-depend on libboost-dev.
+  * Refresh patch queue.
 
- -- Sebastian Kuzminsky <seb@highlab.com>  Tue, 17 May 2022 12:26:52 -0600
+ -- Sebastian Kuzminsky <seb@highlab.com>  Wed, 25 May 2022 09:53:38 -0600
 
 cura-engine (1:4.13.0-1) unstable; urgency=medium
 
