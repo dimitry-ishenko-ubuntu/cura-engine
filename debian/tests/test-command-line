@@ -4,14 +4,6 @@
 # cp $cura_sourcedir/resources/definitions/fdmprinter.def.json debian/tests
 # cp $cura_sourcedir/resources/definitions/fdmextruder.def.json debian/tests
 
-set -e
+set -ex
 
-at_exit() {
-    echo "info: test exiting"
-}
-
-trap at_exit INT TERM EXIT
-
-echo "info: Generating gcode from stl file"
-# CuraEngine prints everything to stderr - not really useful.
-CuraEngine slice -j debian/tests/fdmprinter.def.json -l tests/testModel.stl -o ${AUTOPKGTEST_TMP:-/tmp}/foo.gcode 2>&1
+CuraEngine slice -j debian/tests/fdmprinter.def.json -l tests/testModel.stl -o ${AUTOPKGTEST_TMP:-/tmp}/foo.gcode

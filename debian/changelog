@@ -1,4 +1,4 @@
-cura-engine (1:5.0.0-1) UNRELEASED; urgency=medium
+cura-engine (1:5.0.0-1) experimental; urgency=medium
 
   [ Sebastian Kuzminsky ]
   * New upstream version 5.0.0.
@@ -7,7 +7,10 @@ cura-engine (1:5.0.0-1) UNRELEASED; urgency=medium
   * Build-depend on libboost-dev.
   * Refresh patch queue.
 
- -- Sebastian Kuzminsky <seb@highlab.com>  Wed, 25 May 2022 09:53:38 -0600
+  [ Christoph Berg ]
+  * Update debian/tests/*.json from cura.
+
+ -- Christoph Berg <myon@debian.org>  Fri, 27 May 2022 16:35:18 +0200
 
 cura-engine (1:4.13.0-1) unstable; urgency=medium
 
