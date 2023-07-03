@@ -1,3 +1,9 @@
+cura-engine (1:5.0.0-3) unstable; urgency=medium
+
+  * Tweak lintian overrides to work with old and [new] format.
+
+ -- Christoph Berg <myon@debian.org>  Mon, 03 Jul 2023 22:28:23 +0200
+
 cura-engine (1:5.0.0-2) unstable; urgency=medium
 
   * Fix Lintian override.
