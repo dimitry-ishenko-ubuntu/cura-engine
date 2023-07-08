@@ -1,3 +1,9 @@
+cura-engine (1:5.0.0-4) UNRELEASED; urgency=medium
+
+  * Fix failing unit test. Closes: #1040252
+
+ -- Gregor Riepl <onitake@gmail.com>  Sat, 08 Jul 2023 15:08:39 +0200
+
 cura-engine (1:5.0.0-3) unstable; urgency=medium
 
   * Tweak lintian overrides to work with old and [new] format.
