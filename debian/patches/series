@@ -12,3 +12,4 @@
 0012-disable-remove-failing-test-PolygonTest-simplifyLimi.patch
 0013-disable-remove-failing-test-PolygonTest-simplifyIncr.patch
 0014-Replace-size_t-format-string-in-InfillTest.cpp.patch
+0015-Add-missing-cstdint.patch

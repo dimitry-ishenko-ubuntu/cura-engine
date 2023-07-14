@@ -1,0 +1,25 @@
+From 598697b9d0c4f02d51504cd26e7399613a5a1b36 Mon Sep 17 00:00:00 2001
+From: Gregor Riepl <onitake@gmail.com>
+Date: Fri, 14 Jul 2023 22:21:44 +0200
+Subject: [PATCH] Add missing cstdint include. This avoids compilation problems
+ with gcc 13.
+
+---
+ src/utils/math.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/utils/math.h b/src/utils/math.h
+index 867cc6cad..e30d855dd 100644
+--- a/src/utils/math.h
++++ b/src/utils/math.h
+@@ -4,6 +4,7 @@
+ #ifndef UTILS_MATH_H
+ #define UTILS_MATH_H
+ 
++#include <cstdint>
+ #include <cmath>
+ 
+ 
+-- 
+2.40.1
+
