@@ -1,6 +1,7 @@
 cura-engine (1:5.0.0-4) UNRELEASED; urgency=medium
 
   * Fix failing unit test. Closes: #1040252
+  * Fix gcc-13 compatibility. Closes: #1037614
 
  -- Gregor Riepl <onitake@gmail.com>  Sat, 08 Jul 2023 15:08:39 +0200
 
