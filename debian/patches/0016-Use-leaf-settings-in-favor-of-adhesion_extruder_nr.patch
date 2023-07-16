@@ -1,15 +1,9 @@
-From adecda53fff5c77ccf43a54ee37d5654a4032858 Mon Sep 17 00:00:00 2001
-From: "c.lamboo" <casperlamboo@gmail.com>
-Date: Mon, 11 Jul 2022 08:19:32 +0200
-Subject: [PATCH] Use leaf settings in favor of `adhesion_extruder_nr`
-
-CURA-9383
----
- src/raft.cpp             | 24 +++++++++++++++---------
- src/sliceDataStorage.cpp | 23 ++++++++++++++++++-----
- src/support.cpp          |  7 +++++--
- 3 files changed, 38 insertions(+), 16 deletions(-)
-
+Description: Fix ADT - setting with no value given: 'adhesion_extruder_nr'
+Origin:      https://github.com/Ultimaker/CuraEngine/pull/1693/commits/adecda53fff5c77ccf43a54ee37d5654a4032858
+Bug-Ubuntu:  https://bugs.launchpad.net/bugs/2026769
+Bug:         https://github.com/Ultimaker/CuraEngine/pull/1693
+Forwarded:   not-needed
+Last-Update: 2023-07-10
 --- a/src/raft.cpp
 +++ b/src/raft.cpp
 @@ -18,7 +18,7 @@
