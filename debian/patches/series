@@ -13,3 +13,4 @@
 0013-disable-remove-failing-test-PolygonTest-simplifyIncr.patch
 0014-Replace-size_t-format-string-in-InfillTest.cpp.patch
 0015-Add-missing-cstdint.patch
+0016-Use-leaf-settings-in-favor-of-adhesion_extruder_nr.patch
