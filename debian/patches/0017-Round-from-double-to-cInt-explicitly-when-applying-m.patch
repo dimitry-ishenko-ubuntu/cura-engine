@@ -8,19 +8,9 @@ Subject: [PATCH] Round from double to cInt explicitly when applying matrices.
  src/utils/IntPoint.h | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
-Index: cura-engine/src/utils/IntPoint.h
-===================================================================
---- cura-engine.orig/src/utils/IntPoint.h
-+++ cura-engine/src/utils/IntPoint.h
-@@ -17,6 +17,7 @@ Integer points are used to avoid floatin
- #include <iostream> // auto-serialization / auto-toString()
- #include <limits>
- #include <stdint.h>
-+#include <cfenv> //For nearbyint.
- 
- #include "Point3.h" //For applying Point3Matrices.
- 
-@@ -50,7 +51,7 @@ INLINE Point operator+(const Point& p0,
+--- a/src/utils/IntPoint.h
++++ b/src/utils/IntPoint.h
+@@ -50,7 +50,7 @@
  INLINE Point operator-(const Point& p0, const Point& p1) { return Point(p0.X-p1.X, p0.Y-p1.Y); }
  INLINE Point operator*(const Point& p0, const coord_t i) { return Point(p0.X * i, p0.Y * i); }
  template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type> //Use only for numeric types.
@@ -29,7 +19,7 @@ Index: cura-engine/src/utils/IntPoint.h
  template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type> //Use only for numeric types.
  INLINE Point operator*(const T i, const Point& p0) { return p0 * i; }
  INLINE Point operator/(const Point& p0, const coord_t i) { return Point(p0.X/i, p0.Y/i); }
-@@ -263,9 +264,9 @@ public:
+@@ -263,9 +263,9 @@
  
      Point3 apply(const Point3 p) const
      {
@@ -42,10 +32,8 @@ Index: cura-engine/src/utils/IntPoint.h
      }
  
      /*!
-Index: cura-engine/tests/arcus/ArcusCommunicationPrivateTest.cpp
-===================================================================
---- cura-engine.orig/tests/arcus/ArcusCommunicationPrivateTest.cpp
-+++ cura-engine/tests/arcus/ArcusCommunicationPrivateTest.cpp
+--- a/tests/arcus/ArcusCommunicationPrivateTest.cpp
++++ b/tests/arcus/ArcusCommunicationPrivateTest.cpp
 @@ -4,6 +4,7 @@
  #include <array>
  #include <gtest/gtest.h>
@@ -54,7 +42,7 @@ Index: cura-engine/tests/arcus/ArcusCommunicationPrivateTest.cpp
  
  #include "MockSocket.h"
  #include "../../src/Application.h"
-@@ -227,7 +228,7 @@ TEST_F(ArcusCommunicationPrivateTest, Re
+@@ -227,7 +228,7 @@
      const size_t num_vertex = raw_vertices.size();
      for (size_t i_coord = 0; i_coord < num_vertex; ++i_coord)
      {
