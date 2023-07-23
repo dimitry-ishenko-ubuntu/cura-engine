@@ -1,5 +1,4 @@
 2001-version-test.patch
-1001-relax-test.patch
 0003-reduce-protobuf-build-dependency-version-to-3.12.4.patch
 0004-don-t-be-picky-about-boost-version.patch
 0005-fix-USE_SYSTEM_LIBS-for-protobuf.patch
@@ -14,3 +13,4 @@
 0014-Replace-size_t-format-string-in-InfillTest.cpp.patch
 0015-Add-missing-cstdint.patch
 0016-Use-leaf-settings-in-favor-of-adhesion_extruder_nr.patch
+0017-Round-from-double-to-cInt-explicitly-when-applying-m.patch

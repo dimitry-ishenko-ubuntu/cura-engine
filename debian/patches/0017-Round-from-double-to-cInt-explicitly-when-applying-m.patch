@@ -1,0 +1,65 @@
+From 57de65483771adc2da738afbe94f7a83a1bcc496 Mon Sep 17 00:00:00 2001
+From: Gregor Riepl <onitake@gmail.com>
+Date: Tue, 18 Jul 2023 23:12:33 +0000
+Subject: [PATCH] Round from double to cInt explicitly when applying matrices.
+ This avoids subtle errors when the default rounding more is truncate.
+
+---
+ src/utils/IntPoint.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Index: cura-engine/src/utils/IntPoint.h
+===================================================================
+--- cura-engine.orig/src/utils/IntPoint.h
++++ cura-engine/src/utils/IntPoint.h
+@@ -17,6 +17,7 @@ Integer points are used to avoid floatin
+ #include <iostream> // auto-serialization / auto-toString()
+ #include <limits>
+ #include <stdint.h>
++#include <cfenv> //For nearbyint.
+ 
+ #include "Point3.h" //For applying Point3Matrices.
+ 
+@@ -50,7 +51,7 @@ INLINE Point operator+(const Point& p0,
+ INLINE Point operator-(const Point& p0, const Point& p1) { return Point(p0.X-p1.X, p0.Y-p1.Y); }
+ INLINE Point operator*(const Point& p0, const coord_t i) { return Point(p0.X * i, p0.Y * i); }
+ template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type> //Use only for numeric types.
+-INLINE Point operator*(const Point& p0, const T i) { return Point(p0.X * i, p0.Y * i); }
++INLINE Point operator*(const Point& p0, const T i) { return Point(std::llrint(p0.X * i), std::llrint(p0.Y * i)); }
+ template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type> //Use only for numeric types.
+ INLINE Point operator*(const T i, const Point& p0) { return p0 * i; }
+ INLINE Point operator/(const Point& p0, const coord_t i) { return Point(p0.X/i, p0.Y/i); }
+@@ -263,9 +264,9 @@ public:
+ 
+     Point3 apply(const Point3 p) const
+     {
+-        return Point3(p.x * matrix[0] + p.y * matrix[1] + p.z * matrix[2]
+-                    , p.x * matrix[3] + p.y * matrix[4] + p.z * matrix[5]
+-                    , p.x * matrix[6] + p.y * matrix[7] + p.z * matrix[8]);
++        return Point3(std::llrint(p.x * matrix[0] + p.y * matrix[1] + p.z * matrix[2])
++                    , std::llrint(p.x * matrix[3] + p.y * matrix[4] + p.z * matrix[5])
++                    , std::llrint(p.x * matrix[6] + p.y * matrix[7] + p.z * matrix[8]));
+     }
+ 
+     /*!
+Index: cura-engine/tests/arcus/ArcusCommunicationPrivateTest.cpp
+===================================================================
+--- cura-engine.orig/tests/arcus/ArcusCommunicationPrivateTest.cpp
++++ cura-engine/tests/arcus/ArcusCommunicationPrivateTest.cpp
+@@ -4,6 +4,7 @@
+ #include <array>
+ #include <gtest/gtest.h>
+ #include <fstream>
++#include <cmath>
+ 
+ #include "MockSocket.h"
+ #include "../../src/Application.h"
+@@ -227,7 +228,7 @@ TEST_F(ArcusCommunicationPrivateTest, Re
+     const size_t num_vertex = raw_vertices.size();
+     for (size_t i_coord = 0; i_coord < num_vertex; ++i_coord)
+     {
+-        coord_t micrometers = static_cast<coord_t>(raw_vertices[i_coord] * 1000.f);
++        coord_t micrometers = static_cast<coord_t>(std::llrintf(raw_vertices[i_coord] * 1000.f));
+         raw_min_coords[i_coord % 3] = std::min(micrometers, raw_min_coords[i_coord % 3]);
+         raw_max_coords[i_coord % 3] = std::max(micrometers, raw_max_coords[i_coord % 3]);
+     }
