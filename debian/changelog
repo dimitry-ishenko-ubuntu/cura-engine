@@ -1,4 +1,4 @@
-cura-engine (1:5.0.0-4) UNRELEASED; urgency=medium
+cura-engine (1:5.0.0-4) unstable; urgency=medium
 
   * Fix failing unit test. Closes: #1040252
   * Fix gcc-13 compatibility. Closes: #1037614
@@ -9,7 +9,7 @@ cura-engine (1:5.0.0-4) UNRELEASED; urgency=medium
   * Drop previous patch for rounding errors.
     It's covered by the round error fix.
 
- -- Gregor Riepl <onitake@gmail.com>  Sat, 08 Jul 2023 15:08:39 +0200
+ -- Gregor Riepl <onitake@gmail.com>  Mon, 24 Jul 2023 22:09:39 +0200
 
 cura-engine (1:5.0.0-3) unstable; urgency=medium
 
