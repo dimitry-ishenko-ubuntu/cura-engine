@@ -4,7 +4,7 @@ Maintainer: Debian 3-D Printing Packages <3dprinter-general@lists.alioth.debian.
 Uploaders: Gregor Riepl <onitake@gmail.com>,
  Christoph Berg <myon@debian.org>,
 Build-Depends: debhelper-compat (= 12), cmake,
- pkg-config,
+ pkgconf,
  libcppunit-dev,
  libboost-dev,
  protobuf-compiler, libprotobuf-dev,
